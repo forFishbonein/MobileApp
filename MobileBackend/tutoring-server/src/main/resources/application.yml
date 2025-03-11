@@ -27,6 +27,7 @@ spring:
             enable: true
           debug: true
 
+  # 阿里云OSS的相关配置
 
 
 jwt:

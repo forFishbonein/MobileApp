@@ -32,4 +32,35 @@ public final class SecurityUtils {
         }
         return null;
     }
+
+    /**
+     * 获取当前登录用户角色
+     */
+    public static User.Role getCurrentUserRole() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof User) {
+                User user = (User) authentication.getPrincipal();
+                return user.getRole();
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving current user role: ", e);
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前登录的 User 对象
+     */
+    public static User getCurrentUser() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof User) {
+                return (User) authentication.getPrincipal();
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving current user: ", e);
+        }
+        return null;
+    }
 }
