@@ -215,10 +215,26 @@ fun RegisterScreen(
                 } else if (password != confirmPassword) {
                     ErrorNotifier.showError("Passwords do not match")
                 } else {
-                    // TODO Registration logic goes here
-                    // For example, call an API to register the user
-                    // 跳转到登录页面
-                    onNavigateToLogin()
+                    // Registration logic goes here
+                    coroutineScope.launch {
+                        try {
+                            // Call backend API to send verification code to the provided email.
+                            // 构造请求体
+                            val requestBody = mapOf(
+                                "code" to verificationCode,       // 验证码
+                                "email" to email,
+                                "password" to password,
+                                "role" to userType.name.lowercase()
+                            )
+                            // 调用接口
+                            val response = apiService.register(requestBody)
+                            ErrorNotifier.showSuccess("Register successful!")
+                            // 跳转到登录页面
+                            onNavigateToLogin()
+                        } catch (e: Exception) {
+                            ErrorNotifier.showError(e.message ?: "Register failed.")
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()

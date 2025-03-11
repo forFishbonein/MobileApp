@@ -44,6 +44,7 @@ fun LoginScreen(
     // 账号、密码的本地状态
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val apiService = NetworkClient.createService(ApiService::class.java)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -82,9 +83,17 @@ fun LoginScreen(
             onClick = {
                 scope.launch {
                     try {
-                        // 这里调用接口或模拟登录
-                        onLoginSuccess(Role.TUTOR)
-
+                        // 构造请求体
+                        val requestBody = mapOf(
+                            "email" to email,
+                            "password" to password,
+                        )
+                        // 调用接口
+                        val response = apiService.login(requestBody)
+                        @Suppress("UNCHECKED_CAST")
+                        val roleString = (response.data as? Map<String, Any>)?.get("role") as? String
+                        val role = roleString?.uppercase()?.let { Role.valueOf(it) } ?: Role.STUDENT
+                        onLoginSuccess(role)
                         // 存储用户数据等后续操作
                         val info = mutableMapOf<String, Any>().apply {
                             put("name", email.ifBlank { "张三" })

@@ -24,13 +24,13 @@ data class CommonResponse(
 
 interface ApiService {
     @POST("/user/send-code")
-    suspend fun sendCode(@Body request: Map<String, Any>): CommonResponse
+    suspend fun sendCode(@Body request: Map<String, String>): CommonResponse
 
     @POST("/user/register")
-    suspend fun register(@Body request: Map<String, Any>): CommonResponse
+    suspend fun register(@Body request: Map<String, String>): CommonResponse
 
     @POST("/user/login")
-    suspend fun login(@Body request: Map<String, Any>): CommonResponse
+    suspend fun login(@Body request: Map<String, String>): CommonResponse
 
     @GET("/user/me")
     suspend fun getMyProfile(@Header("Authorization") token: String): CommonResponse

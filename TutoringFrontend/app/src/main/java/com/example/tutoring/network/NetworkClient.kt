@@ -27,7 +27,6 @@ object NetworkClient {
         sharedPrefs.getString("token", null)
     }
 
-
     // 用于处理全局错误提示
     var errorHandler: (String) -> Unit = { msg -> ErrorNotifier.showError(msg) }
 

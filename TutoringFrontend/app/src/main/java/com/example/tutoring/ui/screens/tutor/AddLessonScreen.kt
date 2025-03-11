@@ -82,7 +82,7 @@ fun AddLessonScreen(
                     )
                     coroutineScope.launch {
                         try {
-                            val response = apiService.uploadFile(multipartPart)
+                            val response = apiService.uploadImage(multipartPart)
                             // 上传成功，将返回的图片 URL 添加到列表中
                             imageUrls = imageUrls + response.data.toString()
                         } catch (e: Exception) {
@@ -123,7 +123,7 @@ fun AddLessonScreen(
                     )
                     coroutineScope.launch {
                         try {
-                            val response = apiService.uploadFile(multipartPart)
+                            val response = apiService.uploadPdf(multipartPart)
                             // 上传成功，将返回的 PDF URL 添加到列表中
                             pdfUrls = pdfUrls + response.data.toString()
                         } catch (e: Exception) {
