@@ -14,7 +14,7 @@ import com.example.tutoring.ui.screens.auth.RegisterScreen
 fun AuthNavHost(
     authNavController: NavHostController,
     onLoginSuccess: (Role) -> Unit,
-    context: Context
+    context: Context,
 ) {
     NavHost(
         navController = authNavController,
@@ -28,14 +28,11 @@ fun AuthNavHost(
                 onNavigateToRegister = {
                     authNavController.navigate(AuthRoutes.Register.route)
                 },
-                context
+                context,
             )
         }
         composable(AuthRoutes.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = { role ->
-                    onLoginSuccess(role)
-                },
                 onNavigateToLogin = {
                     authNavController.popBackStack()
                 }

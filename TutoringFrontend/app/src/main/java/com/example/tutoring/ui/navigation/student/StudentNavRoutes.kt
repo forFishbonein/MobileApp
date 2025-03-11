@@ -4,5 +4,6 @@ sealed class StudentNavRoutes(val route: String) {
     object Home : StudentNavRoutes("student_home")
     object Courses : StudentNavRoutes("student_courses")
     object Profile : StudentNavRoutes("student_profile")
+    object Lessons : StudentNavRoutes("student_lessons/{courseId}")
 }
 

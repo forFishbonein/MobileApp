@@ -1,11 +1,15 @@
 package com.example.tutoring.ui.navigation.auth
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.example.tutoring.data.Role
 
@@ -17,12 +21,18 @@ fun AuthMainScreen(onLoginSuccess: (Role) -> Unit,context: Context) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("登录/注册") }
+                title = { Text("Login / Registration") }
             )
         }
     ) { paddingValues ->
-        Column(Modifier.padding(paddingValues)) {
-             AuthNavHost(authNavController, onLoginSuccess, context)
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+        ) {
+            AuthNavHost(authNavController, onLoginSuccess, context)
         }
+//        Column(Modifier.padding(paddingValues)) {
+//
+//        }
     }
 }

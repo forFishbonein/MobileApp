@@ -52,6 +52,21 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
+    implementation("com.google.code.gson:gson:2.10")
+    // OkHttp3 主库
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    // 可选：OkHttp 日志拦截器
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+    // Retrofit2 主库
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Retrofit2 Gson 转换器
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // accompanist-pager
+    implementation("com.google.accompanist:accompanist-pager:0.28.0")
+    // 渲染富文本
+    implementation("com.google.accompanist:accompanist-webview:0.28.0")
+    // 异步加载图片
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -60,5 +75,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 
 }
