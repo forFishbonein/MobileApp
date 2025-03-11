@@ -90,15 +90,17 @@ fun LoginScreen(
                         )
                         // 调用接口
                         val response = apiService.login(requestBody)
-                        @Suppress("UNCHECKED_CAST")
-                        val roleString = (response.data as? Map<String, Any>)?.get("role") as? String
-                        val role = roleString?.uppercase()?.let { Role.valueOf(it) } ?: Role.STUDENT
+                        val role = Role.valueOf(response.data?.role?.uppercase())
+                        val token = response.data.token
+                        // 调用接口
+                        val response2 = apiService.getMyProfile(token)
                         onLoginSuccess(role)
                         // 存储用户数据等后续操作
-                        val info = mutableMapOf<String, Any>().apply {
-                            put("name", email.ifBlank { "张三" })
-                            put("age", 20)
-                        }
+//                        val info = mutableMapOf<String, Any>().apply {
+//                            put("name", email.ifBlank { "张三" })
+//                            put("age", 20)
+//                        }
+                        val info = response2.data
                         saveUserData(context, Role.TUTOR.name, "111111111", info)
                     } catch (e: Exception) {
                         ErrorNotifier.showError(e.message ?: "Login failed.")
