@@ -3,6 +3,7 @@ package com.tutoring.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tutoring.dto.CreateCourseRequest;
 import com.tutoring.entity.Course;
+import com.tutoring.vo.CourseListResponse;
 
 import java.util.List;
 
@@ -16,7 +17,10 @@ public interface CourseService extends IService<Course> {
      */
     Course createCourse(Long tutorId, CreateCourseRequest request);
 
-    List<Course> findCourses(String name, String subject);
+    /**
+     * 列表查询课程，并返回包含教师名字的自定义响应对象
+     */
+    List<CourseListResponse> findCourses(String name, String subject);
 
 }
 
