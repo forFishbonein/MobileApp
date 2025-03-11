@@ -33,14 +33,4 @@ public class TutorDashboardResponse {
          */
         private List<LessonProgressItem> lessonProgressItems;
     }
-
-    @Data
-    public static class LessonProgressItem {
-        private Long lessonId;
-        private String lessonTitle;
-        /**
-         * 状态，如：not_started、in_progress、completed
-         */
-        private String progress;
-    }
 }
