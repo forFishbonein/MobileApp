@@ -28,6 +28,9 @@ object ErrorNotifier {
             showSnackbar?.invoke(message)
         }
     }
+    fun showSuccess(message: String) {
+        showSnackbar?.invoke(message)
+    }
 }
 
 //try {

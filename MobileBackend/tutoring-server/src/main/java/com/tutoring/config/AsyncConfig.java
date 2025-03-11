@@ -10,8 +10,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
-
 @Configuration
 @EnableAsync
 @Slf4j
