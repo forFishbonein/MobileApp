@@ -14,7 +14,7 @@ public interface CourseRegistrationService extends IService<CourseRegistration> 
     void registerCourse(Long studentId, Long courseId);
 
     /**
-     * 获取当前导师所教授课程的所有待审批注册请求
+     * 获取当前导师所教授课程的所有注册请求
      */
     List<CourseRegistration> findRegistrationsByTutor(Long tutorId);
 
@@ -30,4 +30,9 @@ public interface CourseRegistrationService extends IService<CourseRegistration> 
      * 获取当前学生在指定课程中各 Lesson 的完成进度
      */
     CourseProgressResponse getCourseProgress(Long studentId, Long courseId);
+
+    /**
+     * 获取当前学生所有的注册订单
+     */
+    List<CourseRegistration> findRegistrationsByStudent(Long studentId);
 }

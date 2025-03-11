@@ -9,6 +9,7 @@ import com.tutoring.entity.Course;
 import com.tutoring.entity.User;
 import com.tutoring.service.CourseService;
 import com.tutoring.vo.CourseListResponse;
+import com.tutoring.vo.TutorCourseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,26 @@ public class CourseServiceImpl extends ServiceImpl<CourseDao, Course> implements
                     .description(course.getDescription())
                     .subject(course.getSubject())
                     .teacherName(teacherName)
+                    .createdAt(course.getCreatedAt())
+                    .updatedAt(course.getUpdatedAt())
+                    .build();
+            responses.add(dto);
+        }
+        return responses;
+    }
+
+    @Override
+    public List<TutorCourseResponse> findCoursesByTutor(Long tutorId) {
+        QueryWrapper<Course> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tutor_id", tutorId);
+        List<Course> courses = this.list(queryWrapper);
+        List<TutorCourseResponse> responses = new ArrayList<>();
+        for (Course course : courses) {
+            TutorCourseResponse dto = TutorCourseResponse.builder()
+                    .courseId(course.getCourseId())
+                    .courseName(course.getCourseName())
+                    .description(course.getDescription())
+                    .subject(course.getSubject())
                     .createdAt(course.getCreatedAt())
                     .updatedAt(course.getUpdatedAt())
                     .build();

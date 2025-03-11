@@ -26,10 +26,10 @@ public class CourseRegistrationController {
 
     /**
      * GET /course/registrations
-     * 导师查看待审批的注册请求
+     * 导师查看所有注册请求
      */
     @GetMapping
-    public RestResult<List<CourseRegistration>> listRegistrations() {
+    public RestResult<List<CourseRegistration>> listAllRegistrations() {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
@@ -57,6 +57,23 @@ public class CourseRegistrationController {
         }
         courseRegistrationService.updateRegistrationStatus(registrationId, request.getDecision(), currentUserId);
         return RestResult.success(null, "Registration request updated successfully.");
+    }
+
+    /**
+     * GET /course/registrations/student
+     * 学生查看自己所有的订单
+     */
+    @GetMapping("/student")
+    public RestResult<List<CourseRegistration>> listStudentRegistrations() {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
+        }
+        if (SecurityUtils.getCurrentUserRole() != User.Role.student) {
+            throw new CustomException(ErrorCode.FORBIDDEN, "Only students can view their orders.");
+        }
+        List<CourseRegistration> registrations = courseRegistrationService.findRegistrationsByStudent(currentUserId);
+        return RestResult.success(registrations, "Student registrations retrieved successfully.");
     }
 }
 

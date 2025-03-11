@@ -14,6 +14,7 @@ import com.tutoring.util.SecurityUtils;
 import com.tutoring.vo.CourseDetailResponse;
 import com.tutoring.vo.CourseListResponse;
 import com.tutoring.vo.CourseProgressResponse;
+import com.tutoring.vo.TutorCourseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -155,6 +156,23 @@ public class CourseController {
         }
         courseService.removeById(courseId);
         return RestResult.success(null, "Course deleted successfully.");
+    }
+
+    /**
+     * GET /course/tutor/list
+     * 导师查询自己所教的所有课程，返回优化后的格式（不包含教师名字）
+     */
+    @GetMapping("/tutor/list")
+    public RestResult<List<TutorCourseResponse>> listTutorCourses() {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
+        }
+        if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
+            throw new CustomException(ErrorCode.FORBIDDEN, "Only tutors can view their courses.");
+        }
+        List<TutorCourseResponse> courses = courseService.findCoursesByTutor(currentUserId);
+        return RestResult.success(courses, "Tutor courses retrieved successfully.");
     }
 
     /**

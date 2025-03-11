@@ -61,9 +61,11 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
             courseIds.add(course.getCourseId());
         }
         // 查询状态为 pending 的注册请求，且 course_id 属于 tutorCourses
+
+        // 改成查出所有状态的注册请求
         QueryWrapper<CourseRegistration> regQuery = new QueryWrapper<>();
-        regQuery.in("course_id", courseIds)
-                .eq("status", CourseRegistration.RegistrationStatus.pending);
+        regQuery.in("course_id", courseIds);
+//                .eq("status", CourseRegistration.RegistrationStatus.pending);
         return this.baseMapper.selectList(regQuery);
     }
 
@@ -121,4 +123,10 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         return response;
     }
 
+    @Override
+    public List<CourseRegistration> findRegistrationsByStudent(Long studentId) {
+        QueryWrapper<CourseRegistration> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("student_id", studentId);
+        return this.baseMapper.selectList(queryWrapper);
+    }
 }
