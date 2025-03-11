@@ -39,6 +39,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.tutoring.data.Role
+import com.example.tutoring.network.ApiService
+import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.utils.ErrorNotifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,6 +65,7 @@ fun RegisterScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     // 在外部定义一个状态，用于保存用户选择的身份（也可以使用 ViewModel 等）
     var userType by remember { mutableStateOf(Role.STUDENT) } // 默认选中 "Student"
+    val apiService = NetworkClient.createService(ApiService::class.java)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -173,7 +176,18 @@ fun RegisterScreen(
                                 codeCountdown--
                             }
                         }
-                        // TODO: Call backend API to send verification code to the provided email.
+                        coroutineScope.launch {
+                            try {
+                                // Call backend API to send verification code to the provided email.
+                                // 构造请求体
+                                val requestBody = mapOf("email" to email)
+                                // 调用接口
+                                val response = apiService.sendCode(requestBody)
+                                ErrorNotifier.showSuccess("Send successful! Please check your email.")
+                            } catch (e: Exception) {
+                                ErrorNotifier.showError(e.message ?: "Send failed.")
+                            }
+                        }
                     }
                 },
                 enabled = isCodeButtonEnabled && isEmailValid(email),
