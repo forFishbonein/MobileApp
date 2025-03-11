@@ -4,6 +4,7 @@ import com.tutoring.dto.LoginRequest;
 import com.tutoring.dto.RegisterRequest;
 import com.tutoring.dto.SendCodeRequest;
 import com.tutoring.entity.User;
+import com.tutoring.result.RestResult;
 import com.tutoring.service.UserService;
 import com.tutoring.vo.LoginResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -30,31 +31,38 @@ public class UserController {
      * 第一步：只发送验证码，不包含密码和角色
      */
     @PostMapping("/send-code")
-    public String sendCode(@Valid @RequestBody SendCodeRequest request) {
+    public RestResult<?> sendCode(@Valid @RequestBody SendCodeRequest request) {
         log.info("Send code request: {}", request);
         userService.sendEmailCode(request.getEmail());
-        return "Verification code has been sent to your email. Please enter it to complete registration.";
+        return RestResult.success(null,
+                "Verification code has been sent to your email. Please enter it to complete registration.");
     }
 
     /**
      * 第二步：提交注册信息（含邮箱、验证码、密码、角色）
+     * 这里注册成功后，不返回用户对象
      */
     @PostMapping("/register")
-    public User register(@Valid @RequestBody RegisterRequest request) {
+    public RestResult<?> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Register request: {}", request);
-        User newUser = userService.registerWithCode(request);
-
-        // 不返回密码给前端
-        newUser.setPasswordHash(null);
-        return newUser;
+        userService.registerWithCode(request);
+        return RestResult.success(null, "Registration successful!");
     }
 
     /**
      * 登录接口
      */
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest loginReq) {
+    public RestResult<LoginResponse> login(@Valid @RequestBody LoginRequest loginReq) {
         log.info("Login request: {}", loginReq);
-        return userService.login(loginReq);
+        LoginResponse response = userService.login(loginReq);
+        return RestResult.success(response, "Login successful.");
     }
 }
+
+
+
+
+
+
+
