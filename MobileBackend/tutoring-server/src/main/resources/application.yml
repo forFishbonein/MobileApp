@@ -28,11 +28,7 @@ spring:
           debug: true
 
 # 阿里云OSS的相关配置
-ali-oss:
-  endpoint: oss-eu-west-1.aliyuncs.com
-  access-key-id: LTAI5tAyLCTxopFBvZ1WQkUz
-  access-key-secret: 6xyVEBQPktBIYxqRE7T77rcg1zFNdW
-  bucket-name: tutoring
+
 
 jwt:
   secret: "YourJWTSecretKey"
