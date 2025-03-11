@@ -54,7 +54,7 @@ public class CourseRegistrationController {
         }
         if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
             throw new CustomException(ErrorCode.FORBIDDEN, "Only tutors can update registration requests.");
-        } 
+        }
         courseRegistrationService.updateRegistrationStatus(registrationId, request.getDecision(), currentUserId);
         return RestResult.success(null, "Registration request updated successfully.");
     }

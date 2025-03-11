@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tutoring.dao.*;
 import com.tutoring.entity.*;
 import com.tutoring.service.TutorDashboardService;
+import com.tutoring.vo.LessonProgressItem;
 import com.tutoring.vo.TutorDashboardResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,10 +69,10 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                         User student = userDao.selectById(reg.getStudentId());
                         studentProgress.setStudentNickname(student != null ? student.getNickname() : "");
 
-                        List<TutorDashboardResponse.LessonProgressItem> lessonProgressItems = new ArrayList<>();
+                        List<LessonProgressItem> lessonProgressItems = new ArrayList<>();
                         if (lessons != null) {
                             for (Lesson lesson : lessons) {
-                                TutorDashboardResponse.LessonProgressItem lpItem = new TutorDashboardResponse.LessonProgressItem();
+                                LessonProgressItem lpItem = new LessonProgressItem();
                                 lpItem.setLessonId(lesson.getLessonId());
                                 lpItem.setLessonTitle(lesson.getTitle());
                                 // 查询当前学生在该 Lesson 的进度
