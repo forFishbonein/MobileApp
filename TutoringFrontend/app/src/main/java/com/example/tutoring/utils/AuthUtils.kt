@@ -12,7 +12,7 @@ import com.example.tutoring.data.Role
 fun getRoleFromLogin(context: Context): Role? {
     // 获取存储用户信息的 SharedPreferences（例如 "user_prefs"）
     val sharedPrefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-    sharedPrefs.edit().clear().apply() // TODO 手动清空
+//    sharedPrefs.edit().clear().apply() // TODO 手动清空
     // 获取保存在 SharedPreferences 中的用户角色，假设保存的键名为 "user_role"
     val roleString = sharedPrefs.getString("user_role", null)
     Log.d("roleString", "$roleString")
@@ -23,3 +23,9 @@ fun getRoleFromLogin(context: Context): Role? {
         else -> null  // 未登录或无角色信息
     }
 }
+
+fun logoutClear(context: Context) {
+    val sharedPrefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    sharedPrefs.edit().clear().apply()
+}
+
