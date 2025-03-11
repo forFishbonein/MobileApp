@@ -6,5 +6,5 @@ import java.util.List;
 @Data
 public class CourseProgressResponse {
     private Long courseId;
-    private List<TutorDashboardResponse.LessonProgressItem> lessonProgressList;
+    private List<LessonProgressItem> lessonProgressList;
 }

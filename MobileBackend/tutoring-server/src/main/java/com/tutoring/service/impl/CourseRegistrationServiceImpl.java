@@ -14,6 +14,7 @@ import com.tutoring.exception.CustomException;
 import com.tutoring.service.CourseRegistrationService;
 import com.tutoring.service.LessonService;
 import com.tutoring.vo.CourseProgressResponse;
+import com.tutoring.vo.LessonProgressItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -97,20 +98,20 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         lessonQuery.eq("course_id", courseId);
         List<Lesson> lessons = lessonService.list(lessonQuery);
 
-        List<CourseProgressResponse.LessonProgressItem> progressItems = new ArrayList<>();
+        List<LessonProgressItem> progressItems = new ArrayList<>();
         for (Lesson lesson : lessons) {
             QueryWrapper<LessonProgress> progressQuery = new QueryWrapper<>();
             progressQuery.eq("lesson_id", lesson.getLessonId())
                     .eq("student_id", studentId);
             LessonProgress progress = lessonProgressDao.selectOne(progressQuery);
 
-            CourseProgressResponse.LessonProgressItem item = new CourseProgressResponse.LessonProgressItem();
+            LessonProgressItem item = new LessonProgressItem();
             item.setLessonId(lesson.getLessonId());
-            item.setTitle(lesson.getTitle());
+            item.setLessonTitle(lesson.getTitle());
             if (progress == null) {
-                item.setStatus(LessonProgress.ProgressStatus.not_started.name());
+                item.setProgress(LessonProgress.ProgressStatus.not_started.name());
             } else {
-                item.setStatus(progress.getStatus().name());
+                item.setProgress(progress.getStatus().name());
             }
             progressItems.add(item);
         }
@@ -119,4 +120,5 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         response.setLessonProgressList(progressItems);
         return response;
     }
+
 }
