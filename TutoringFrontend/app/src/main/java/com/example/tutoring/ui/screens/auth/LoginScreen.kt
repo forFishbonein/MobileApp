@@ -94,14 +94,19 @@ fun LoginScreen(
                         val token = response.data.token
                         // 调用接口
                         val response2 = apiService.getMyProfile(token)
-                        onLoginSuccess(role)
+
                         // 存储用户数据等后续操作
 //                        val info = mutableMapOf<String, Any>().apply {
 //                            put("name", email.ifBlank { "张三" })
 //                            put("age", 20)
 //                        }
                         val info = response2.data
-                        saveUserData(context, Role.TUTOR.name, "111111111", info)
+                        if (info != null) {
+                            saveUserData(context, role.name, token, info)
+                            onLoginSuccess(role)
+                        }else{
+                            ErrorNotifier.showError(e.message ?: "Login failed.")
+                        }
                     } catch (e: Exception) {
                         ErrorNotifier.showError(e.message ?: "Login failed.")
                     }
