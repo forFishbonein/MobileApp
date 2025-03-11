@@ -9,6 +9,43 @@ spring:
     url: jdbc:mysql://8.130.52.237:3306/tutoring_database?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     username: tutoring
     password: RYkaZCwsBKcxpJ6Y
+  #临时解决方案
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: wxinran543@gmail.com      # 替换为你的 Gmail 邮箱地址
+    password: dlgyysvqolbcljep          # 替换为你的 Gmail 应用专用密码
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          debug: true
+
+
+
+jwt:
+  secret: "YourJWTSecretKey"
+  expiration: 86400000
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: tutoring-common.com.tutoring.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+knife4j:
+  locale: en
+
+google:
+  clientId: "642557482063-q866pb3tlp0blvso126q2i2si40qn6oh.apps.googleusercontent.com"
+
 
   #  datasource:
 #    type: com.alibaba.druid.pool.DruidDataSource
@@ -28,42 +65,6 @@ spring:
 #    url: jdbc:mysql://mysql:3306/webCloud?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
 #    username: root
 #    password: Aa1401545387
-  #临时解决方案
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: wxinran543@gmail.com      # 替换为你的 Gmail 邮箱地址
-    password: dlgyysvqolbcljep          # 替换为你的 Gmail 应用专用密码
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          debug: true
-
-jwt:
-  secret: "YourJWTSecretKey"
-  expiration: 86400000
-
-mybatis-plus:
-  mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: tutoring-common.com.tutoring.entity
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
-
-knife4j:
-  locale: en
-
-
-
-google:
-  clientId: "642557482063-q866pb3tlp0blvso126q2i2si40qn6oh.apps.googleusercontent.com"
 
 #server:
 #  port: 8080

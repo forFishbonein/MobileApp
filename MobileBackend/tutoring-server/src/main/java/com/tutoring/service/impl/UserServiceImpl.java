@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutoring.dao.UserDao;
 import com.tutoring.dto.LoginRequest;
 import com.tutoring.dto.RegisterRequest;
+import com.tutoring.dto.UpdateUserProfileRequest;
 import com.tutoring.entity.User;
 import com.tutoring.enumeration.ErrorCode;
 import com.tutoring.exception.CustomException;
 import com.tutoring.service.MailService;
+import com.tutoring.service.OssService;
 import com.tutoring.service.UserService;
 import com.tutoring.util.JwtUtils;
 import com.tutoring.vo.LoginResponse;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +36,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private OssService ossService;
 
     /**
      * 内存Map：只保存【email -> 验证码】, 不需要存储密码/角色等。
@@ -148,5 +154,56 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     private String generateRandomCode() {
         int r = (int) ((Math.random() * 9 + 1) * 100000);
         return String.valueOf(r);
+    }
+
+    // ==================================
+    // 4. 获取用户信息
+    // ==================================
+    @Override
+    public User getUserProfile(Long userId) {
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "User not found.");
+        }
+        return user;
+    }
+
+    // ==================================
+    // 5. 更新用户信息
+    // ==================================
+    @Override
+    public void updateUserProfile(Long userId, UpdateUserProfileRequest request) {
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "User not found.");
+        }
+
+        user.setNickname(request.getNickname());
+        user.setBio(request.getBio());
+        // 如果允许更新AvatarUrl也可以设置 user.setAvatarUrl(request.getAvatarUrl());
+
+        this.updateById(user);
+    }
+
+    // ==================================
+    // 6. 上传头像
+    // ==================================
+    @Override
+    public String uploadAvatar(Long userId, MultipartFile file) {
+        // (1) 查用户
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "User not found.");
+        }
+
+        // (2) 执行上传到OSS (使用OssService)
+        String avatarUrl = ossService.uploadFile(file);
+
+        // (3) 更新用户的avatar
+        user.setAvatarUrl(avatarUrl);
+        this.updateById(user);
+
+        // (4) 返回URL给前端
+        return avatarUrl;
     }
 }
