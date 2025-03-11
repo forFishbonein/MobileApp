@@ -6,14 +6,12 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 /**
- * 登录请求
+ * 用于请求发送验证码的请求体
  */
 @Data
-public class LoginRequest {
+public class SendCodeRequest {
+
     @Email
     @NotBlank
     private String email;
-
-    @NotBlank
-    private String password;
 }

@@ -17,16 +17,7 @@ import java.util.Date;
 public class User implements Serializable {
 
     @TableId(value = "user_id", type = IdType.AUTO)
-    private Long userID;
-
-    @TableField("name")
-    private String name;
-
-    @TableField("date_of_birth")
-    private LocalDate dateOfBirth;
-
-    @TableField("address")
-    private String address;
+    private Long userId;
 
     @TableField("email")
     private String email;
@@ -38,19 +29,37 @@ public class User implements Serializable {
     private Role role;
 
     @TableField("account_status")
-    private AccountStatus accountStatus = AccountStatus.Pending;
+    private AccountStatus accountStatus;
+
+    @TableField("email_verified")
+    private Boolean emailVerified;
+
+    @TableField("nickname")
+    private String nickname;
+
+    @TableField("bio")
+    private String bio;
+
+    @TableField("avatar_url")
+    private String avatarUrl;
 
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 
+    /**
+     * 枚举对应数据库的 ENUM('student','tutor')
+     */
     public enum Role {
-        member, trainer, admin
+        student, tutor
     }
 
+    /**
+     * 枚举对应数据库的 ENUM('Pending','Active','Suspended')
+     */
     public enum AccountStatus {
-        Pending, Approved, Suspended
+        Pending, Active, Suspended
     }
 }

@@ -25,7 +25,7 @@ public final class SecurityUtils {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() instanceof User) {
                 User user = (User) authentication.getPrincipal();
-                return user.getUserID(); // 请确保 User 类中有 getUserID() 方法
+                return user.getUserId();
             }
         } catch (Exception e) {
             log.error("Error retrieving current user ID: ", e);

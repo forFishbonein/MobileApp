@@ -1,13 +1,12 @@
 package com.tutoring.vo;
 
 import com.tutoring.entity.User;
-import lombok.*;
+import lombok.Data;
 
+/**
+ * 登录成功后返回
+ */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@ToString
 public class LoginResponse {
     private String token;
     private Long userId;

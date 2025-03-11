@@ -1,7 +1,9 @@
 package com.tutoring.filter;
 
+import com.tutoring.dao.UserDao;
 import com.tutoring.entity.User;
-import com.tutoring.service.RedisCacheService;
+import com.tutoring.enumeration.ErrorCode;
+import com.tutoring.exception.CustomException;
 import com.tutoring.util.JwtUtils;
 import com.tutoring.util.UserRoleUtil;
 import io.jsonwebtoken.Claims;
@@ -27,19 +29,13 @@ import java.io.IOException;
  */
 @Slf4j
 @Component
-// 继承自 OncePerRequestFilter 的过滤器会确保每个 HTTP 请求只会调用一次 doFilterInternal 方法
-// 在你的 SecurityConfig 中有这么一句配置：
-// http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-// 因此，当一个 HTTP 请求到达时，
-// Spring Security 会按照过滤器链的顺序先调用你的 JwtAuthenticationFilter（继承自 OncePerRequestFilter），
-// 完成 JWT Token 的解析和认证，然后再调用后续的过滤器（比如 UsernamePasswordAuthenticationFilter）和其他安全组件。
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtils jwtUtils;
 
     @Autowired
-    private RedisCacheService redisCacheService;
+    private UserDao userDao;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -49,11 +45,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         String token = null;
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
         }
 
-        // 如果拿到了Token, 验证它
+        // 如果拿到了 Token，则验证它
         if (token != null && jwtUtils.validateToken(token)) {
             Claims claims = jwtUtils.getClaims(token);
             String userIdStr = claims.getSubject(); // subject里放的是 userId
@@ -61,23 +58,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 Long userId = Long.valueOf(userIdStr);
-                // 去缓存中取用户信息
-                User user = redisCacheService.getUser(userId);
+                // 从 DB 获取用户
+                User user = userDao.selectById(userId);
+                if (user == null) {
+                    throw new CustomException(ErrorCode.UNAUTHORIZED, "User not found.");
+                }
 
-                // 判断用户是否已经被注销 或者 用户权限是否变动
-                // 如果用户没问题！则为这次http请求设置认证信息，确保接下来的业务逻辑可以获取到用户信息
-                if (user != null && user.getRole().name().equals(roleStr)) {
-                    // 构建Security认证对象
+                // 判断用户角色是否一致
+                if (user.getRole().name().equals(roleStr)) {
+                    // 构建 Security 认证对象
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    user, // Principal，后续可在代码中取SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+                                    user, // Principal
                                     null, // Credentials
-                                    // 把角色加入权限
                                     UserRoleUtil.buildAuthorities(user.getRole())
                             );
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // 将认证信息放到上下文
+                    // 设置到上下文
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
             } catch (NumberFormatException e) {
@@ -85,8 +83,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 让无效 Token 直接跳过认证，然后由 Security 决定是否 401/403，例如他后序的 controller
-        // @PreAuthorize("hasRole('Admin')") 会拒绝访问
         // 放行
         filterChain.doFilter(request, response);
     }

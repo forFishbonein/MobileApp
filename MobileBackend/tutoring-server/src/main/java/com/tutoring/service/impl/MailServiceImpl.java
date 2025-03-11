@@ -1,8 +1,5 @@
 package com.tutoring.service.impl;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 import com.tutoring.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +7,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 @Service
 @Slf4j
@@ -62,15 +62,4 @@ public class MailServiceImpl implements MailService {
                 "If you did not request a password reset, please ignore this email.";
         sendMail(toEmail, subject, text);
     }
-
-
 }
-
-// 废弃
-//    @Override
-//    public void sendAdminNotification(String adminEmail, String message) {
-//        String subject = "New User Pending Review";
-//        String text = "Dear Administrator,\n\n" + message +
-//                "\nPlease log in to the admin system to review the new user.\n\nBest regards";
-//        sendMail(adminEmail, subject, text);
-//    }
