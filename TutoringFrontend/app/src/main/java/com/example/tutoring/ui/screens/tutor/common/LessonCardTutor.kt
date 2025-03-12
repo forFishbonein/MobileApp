@@ -74,10 +74,6 @@ fun LessonCardTutor(
 //                // data:text/html 指定 MIME 类型为 text/html
 //                url = "data:text/html;charset=utf-8,$encodedHtml"
 //            )
-
-            Column(modifier = Modifier
-                .padding(16.dp)
-                .heightIn(min = 375.dp)){
 //                Box(
 //                    modifier = Modifier
 //                        .fillMaxWidth()
@@ -87,6 +83,10 @@ fun LessonCardTutor(
 //                        modifier = Modifier.fillMaxSize()
 //                    )
 //                }
+
+            Column(modifier = Modifier
+                .padding(16.dp)
+                .heightIn(min = 375.dp)){
                 Text(
                     text = lesson.content,
                     style = MaterialTheme.typography.bodyMedium.copy(

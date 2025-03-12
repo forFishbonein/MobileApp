@@ -22,12 +22,12 @@ fun TutorMainScreen(onLoginOut: () -> Unit) {
         topBar = {
             // 根据当前路由决定标题
             val titleText = when {
-                currentRoute?.startsWith("tutor_home") == true -> "Home"
+                currentRoute?.startsWith("tutor_home") == true -> "Home-Tutor"
                 currentRoute?.startsWith("tutor_application") == true -> "Application"
                 currentRoute?.startsWith("tutor_courses") == true -> "Courses"
                 currentRoute?.startsWith("tutor_profile") == true -> "Profile"
                 currentRoute?.startsWith("tutor_lessons") == true -> "Lessons"
-                else -> "Student"
+                else -> "Tutor"
             }
 
             // 使用 Material3 TopAppBar，并设置自定义背景色

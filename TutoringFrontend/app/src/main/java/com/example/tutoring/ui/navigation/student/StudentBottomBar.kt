@@ -23,7 +23,7 @@ fun StudentBottomBar(
     ) {
         NavBarItems.StudentBarItems.forEach { navItem ->
             NavigationBarItem(
-                selected = currentRoute == navItem.route,
+                selected = currentRoute?.startsWith(navItem.route) == true,
                 onClick = {
                     // 点击时导航到对应路由
                     navController.navigate(navItem.route) {

@@ -5,5 +5,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun HomeScreen() {
-    Text(text = "这是课程列表页")
+    Text(text = "Data Analysis Page")
 }

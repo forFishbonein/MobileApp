@@ -1,5 +1,6 @@
 package com.example.tutoring.ui.screens.tutor
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.tutoring.data.Lesson
 import com.example.tutoring.network.ApiService
@@ -24,13 +28,14 @@ import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.navigation.tutor.TutorNavRoutes
 import com.example.tutoring.ui.screens.tutor.common.LessonCardTutor
 import com.example.tutoring.utils.ErrorNotifier
+import com.example.tutoring.utils.LoadingViewModel
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
 @SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalPagerApi::class) // Accompanist Pager 注解
 @Composable
-fun LessonsScreen(courseId: Int?, navController: NavHostController) {
+fun LessonsScreen(courseId: Int?, navController: NavHostController,loadingViewModel: LoadingViewModel = viewModel()) {
     // TODO 根据courseId去查找对应的 course 内容
     // 模拟一组 lesson 数据
 //    val lessons = listOf(
@@ -60,6 +65,17 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController) {
 //        Lesson(2, "Lesson 2", "doing", "This is the second lesson."),
 //        Lesson(3, "Lesson 3", "doing", "This is the third lesson."),
 //    )
+    // 全局加载指示器（overlay）
+    if (loadingViewModel.isHttpLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
     var lessons by remember { mutableStateOf(listOf<Lesson>()) }
     // PagerState 控制当前显示第几页
     val pagerState = rememberPagerState()
@@ -67,11 +83,13 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController) {
     val apiService = NetworkClient.createService(ApiService::class.java)
     fun getAllLessons(){
         coroutineScope.launch {
+            loadingViewModel.setLoading(true)
             try {
                 val response = apiService.listLessons(courseId)
                 lessons = response.data as List<Lesson>
+                loadingViewModel.setLoading(false)
             } catch (e: Exception) {
-                ErrorNotifier.showError(e.message ?: "Failed.")
+                loadingViewModel.setLoading(false)
             }
         }
     }

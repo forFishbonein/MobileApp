@@ -1,40 +1,44 @@
 package com.example.tutoring.ui.screens.student
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tutoring.data.Lesson
 import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.student.common.LessonCard
 import com.example.tutoring.utils.ErrorNotifier
+import com.example.tutoring.utils.LoadingViewModel
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class) // Accompanist Pager 注解
 @Composable
-fun LessonsScreen(courseId: Int?) {
+fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel()) {
+    // 全局加载指示器（overlay）
+    if (loadingViewModel.isHttpLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
     // TODO 根据courseId去查找对应的 course 内容
-    // 模拟一组 lesson 数据
-//    val lessons = listOf(
-//        Lesson(1, "Lesson 1", "completed", "<h1>Lesson Title</h1>\n" +
-//                "  <p>This lesson covers the basic concepts of the topic. You can include any rich text content here, such as formatted paragraphs, images, or lists.</p>\n" +
-//                "  <p><strong>Key Points:</strong></p>\n" +
-//                "  <ul>\n" +
-//                "    <li>Introduction to the topic</li>\n" +
-//                "    <li>Explanation of core concepts</li>\n" +
-//                "    <li>Examples and exercises</li>\n" +
-//                "  </ul>"),
-//        Lesson(2, "Lesson 2", "completed", "This is the second lesson."),
-//        Lesson(3, "Lesson 3", "locked", "This is the third lesson."),
-//    )
     var lessons by remember { mutableStateOf(listOf<Lesson>()) }
     // PagerState 控制当前显示第几页
     val pagerState = rememberPagerState()
@@ -42,11 +46,13 @@ fun LessonsScreen(courseId: Int?) {
     val apiService = NetworkClient.createService(ApiService::class.java)
     fun getAllLessons(){
         coroutineScope.launch {
+            loadingViewModel.setLoading(true)
             try {
                 val response = apiService.listLessons(courseId)
                 lessons = response.data as List<Lesson>
+                loadingViewModel.setLoading(false)
             } catch (e: Exception) {
-                ErrorNotifier.showError(e.message ?: "Failed.")
+                loadingViewModel.setLoading(false)
             }
         }
     }

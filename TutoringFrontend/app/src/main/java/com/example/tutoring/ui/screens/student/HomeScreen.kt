@@ -1,6 +1,8 @@
 package com.example.tutoring.ui.screens.student
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,19 +29,31 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tutoring.data.Course
 import com.example.tutoring.data.Registration
 import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.student.common.CourseCard
 import com.example.tutoring.utils.ErrorNotifier
+import com.example.tutoring.utils.LoadingViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-
+fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
+    // 全局加载指示器（overlay）
+    if (loadingViewModel.isHttpLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
     // 状态管理
     var courseName by remember { mutableStateOf("") }
     var subjectName by remember { mutableStateOf("") }
@@ -54,6 +69,7 @@ fun HomeScreen() {
     val apiService = NetworkClient.createService(ApiService::class.java)
     val pageSize = 5
     fun getAllCourses(){
+        loadingViewModel.setLoading(true)
         scope.launch {
             try {
                 val response = apiService.listCourses(courseName, subjectName)
@@ -66,8 +82,9 @@ fun HomeScreen() {
                     course.copy(status = matchingRegistration?.status ?: "")
                 } ?: emptyList()
                 page++
+                loadingViewModel.setLoading(false)
             } catch (e: Exception) {
-                ErrorNotifier.showError(e.message ?: "Register failed.")
+                loadingViewModel.setLoading(false)
             }
         }
     }

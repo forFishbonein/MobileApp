@@ -47,7 +47,7 @@ interface ApiService {
 //    val token = "your_token_here" // 如 "Bearer xxx"
 //    val response = apiService.getMyProfile("Bearer $token")
     @PUT("/user/me")
-    suspend fun updateMyProfile(@Body request: Map<String, Any>): CommonResponse
+    suspend fun updateMyProfile(@Body request: Map<String, String>): CommonResponse
 
     @Multipart
     @POST("/user/me/avatar")

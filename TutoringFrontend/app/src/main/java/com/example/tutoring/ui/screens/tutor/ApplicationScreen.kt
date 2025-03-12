@@ -1,6 +1,8 @@
 package com.example.tutoring.ui.screens.tutor
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.tutoring.data.Course
 import com.example.tutoring.data.Registration
@@ -29,6 +34,7 @@ import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.tutor.common.CourseCardTutor
 import com.example.tutoring.utils.ErrorNotifier
+import com.example.tutoring.utils.LoadingViewModel
 import kotlinx.coroutines.launch
 
 data class CourseRegistration(
@@ -47,8 +53,18 @@ data class CourseRegistration(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ApplicationScreen(navController: NavHostController) {
-
+fun ApplicationScreen(navController: NavHostController, loadingViewModel: LoadingViewModel = viewModel()) {
+    // 全局加载指示器（overlay）
+    if (loadingViewModel.isHttpLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
     // 模拟分页数据
     var page by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
@@ -60,6 +76,7 @@ fun ApplicationScreen(navController: NavHostController) {
     val pageSize = 10
     fun getAllCourses(){
         scope.launch {
+            loadingViewModel.setLoading(true)
             try {
                 val response = apiService.listAllRegistrations()
                 allCourses = response.data as List<Registration>
@@ -86,8 +103,9 @@ fun ApplicationScreen(navController: NavHostController) {
                     )
                 } ?: emptyList()
                 page++
+                loadingViewModel.setLoading(false)
             } catch (e: Exception) {
-                ErrorNotifier.showError(e.message ?: "Register failed.")
+                loadingViewModel.setLoading(false)
             }
         }
     }
@@ -214,4 +232,5 @@ fun ApplicationScreen(navController: NavHostController) {
         }
 
     }
+
 }
