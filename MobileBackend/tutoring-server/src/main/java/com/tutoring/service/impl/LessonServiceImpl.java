@@ -48,4 +48,25 @@ public class LessonServiceImpl extends ServiceImpl<LessonDao, Lesson> implements
         log.info("New lesson created: lessonId={}, courseId={}", lesson.getLessonId(), lesson.getCourseId());
         return lesson;
     }
+
+    @Override
+    public void completeLesson(Long lessonId, Long tutorId) {
+        // 1. 查询 Lesson 是否存在
+        Lesson lesson = this.getById(lessonId);
+        if (lesson == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "Lesson not found.");
+        }
+        // 2. 查询对应的 Course
+        Course course = courseDao.selectById(lesson.getCourseId());
+        if (course == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "Course not found.");
+        }
+        // 3. 验证当前导师是否为该课程的拥有者
+        if (!course.getTutorId().equals(tutorId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN, "You are not the owner of this course.");
+        }
+        // 4. 更新 Lesson 的状态为已完成
+        lesson.setCompleted(true);
+        this.updateById(lesson);
+    }
 }
