@@ -77,7 +77,7 @@ interface ApiService {
     @GET("/course/registrations/student")
     suspend fun listStudentRegistrations(): SpecialResponse<List<Registration>>
 
-    //TODO 这个是不是查的老师的？
+    //这个是查的老师的
     @GET("/course/registrations")
     suspend fun listAllRegistrations(): SpecialResponse<List<Registration>>
 
@@ -103,7 +103,7 @@ interface ApiService {
     @PUT("/lesson/{lessonId}")
     suspend fun updateLesson(@Body request: LessonRequest, @Path("lessonId") lessonId: Int?): CommonResponse
 
-    @POST("/lessonProgress/{lessonId}/complete")
+    @PUT("/lesson/{lessonId}/complete")
     suspend fun completeLesson(
         @Path("lessonId") lessonId: Int
     ): CommonResponse
