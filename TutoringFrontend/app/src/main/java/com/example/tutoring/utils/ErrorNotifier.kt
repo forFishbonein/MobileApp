@@ -39,7 +39,7 @@ object ErrorNotifier {
 //    ErrorNotifier.showError("数据加载失败，请稍后重试")
 //}
 
-
+// TODO 用法
 //ErrorNotifier.showError(message, useDialog = true)
 
 

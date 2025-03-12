@@ -8,5 +8,5 @@ sealed class TutorNavRoutes(val route: String) {
     object Courses : TutorNavRoutes("tutor_courses")
     object Profile : TutorNavRoutes("tutor_profile")
     object Lessons : TutorNavRoutes("tutor_lessons/{courseId}")
-    object AddLesson : TutorNavRoutes("tutor_add_lesson")
+    object AddLesson : TutorNavRoutes("tutor_add_lesson?courseId={courseId}&lesson={lesson}")
 }

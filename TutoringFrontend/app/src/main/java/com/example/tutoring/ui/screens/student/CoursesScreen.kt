@@ -24,7 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.tutoring.data.Course
+import com.example.tutoring.data.Registration
+import com.example.tutoring.network.ApiService
+import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.student.common.CourseCard
+import com.example.tutoring.utils.ErrorNotifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -36,45 +40,98 @@ fun CoursesScreen(navController: NavHostController) {
     var page by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var courses by remember { mutableStateOf(listOf<Course>()) }
+    var allCourses by remember { mutableStateOf(listOf<Registration>()) }
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val apiService = NetworkClient.createService(ApiService::class.java)
+    val pageSize = 10
+    fun getAllCourses(){
+        scope.launch {
+            try {
+                val response = apiService.listStudentRegistrations()
+                val registrationsList = response.data as List<Registration>
+                // 过滤出来是成功订了的
+                allCourses = registrationsList.filter { it.status == "approved" }
 
+                //TODO 这里可以直接拿到最新的allCourses，和 React 不同！
+                @Suppress("UNCHECKED_CAST")
+                courses = allCourses.take(pageSize).map { registration ->
+                    // 请求 detail 接口，根据 courseId 获取课程详情
+                    val detailResponse = apiService.getCourseDetail(registration.courseId)
+                    // 假设 detailResponse.data 为 CourseDetail 对象
+                    val detail = detailResponse.data as Course
+                    // 合并数据：重复的字段使用 detail 返回的值，保留 registration 中的 status
+                    Course(
+                        courseId = registration.courseId,
+                        courseName = detail.courseName,
+                        description = detail.description,
+                        subject = detail.subject,
+                        status = registration.status,
+                        updatedAt = detail.updatedAt,
+                        createdAt = detail.createdAt
+                    )
+                } ?: emptyList()
+                page++
+            } catch (e: Exception) {
+                ErrorNotifier.showError(e.message ?: "Register failed.")
+            }
+        }
+    }
     // 模拟加载数据函数
-    fun loadCourses(loadMore: Boolean = false) {
+    fun loadCourses() {
         // 如果正在加载，直接返回
         if (isLoading) return
         isLoading = true
 
         // 模拟网络请求
         scope.launch {
-            delay(1000) // 模拟网络延迟
-
-            // 生成假数据 // TODO 需要过滤出来status = success的
-            val newCourses = (1..10).map {
-                val index = ((page - 1) * 10) + it
-                Course(
-                    id = index,
-                    courseName = "Course #$index",
-                    subjectName = "Subject #${index % 3 + 1}",
-                    status = ""
-                )
-            }
-
-            if (loadMore) {
-                // 在原有列表后追加
-                courses = courses + newCourses
+//            delay(1000) // 模拟网络延迟
+// 根据页码计算起始和结束下标
+            val startIndex = (page - 1) * pageSize
+            val endIndex = minOf(startIndex + pageSize, allCourses.size)
+// 截取当前页的数据，如果超出范围则返回空列表
+            val newCourses = if (startIndex < allCourses.size) {
+                allCourses.subList(startIndex, endIndex).map { registration ->
+                    // 请求 detail 接口，根据 courseId 获取课程详情
+                    val detailResponse = apiService.getCourseDetail(registration.courseId)
+                    // 假设 detailResponse.data 为 CourseDetail 对象
+                    val detail = detailResponse.data as Course
+                    // 合并数据：重复的字段使用 detail 返回的值，保留 registration 中的 status
+                    Course(
+                        courseId = registration.courseId,
+                        courseName = detail.courseName,
+                        description = detail.description,
+                        subject = detail.subject,
+                        status = registration.status,
+                        updatedAt = detail.updatedAt,
+                        createdAt = detail.createdAt
+                    )
+                }
             } else {
-                // 重置列表
-                courses = newCourses
+                emptyList()
             }
+            // 在原有列表后追加
+            courses = courses + newCourses
             page++
             isLoading = false
+//            // 生成假数据
+//            val newCourses = (1..10).map {
+//                val index = ((page - 1) * 10) + it
+//                Course(
+//                    id = index,
+//                    courseName = "Course #$index",
+//                    subjectName = "Subject #${index % 3 + 1}",
+//                    status = ""
+//                )
+//            }
+
+
         }
     }
 
     // 首次进入页面时加载数据
     LaunchedEffect(Unit) {
-        loadCourses(loadMore = false)
+        getAllCourses()
     }
 
     // 触底加载：当列表滚动到末尾时，加载下一页
@@ -82,7 +139,7 @@ fun CoursesScreen(navController: NavHostController) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
                 if (!isLoading && lastVisibleItemIndex == courses.lastIndex) {
-                    loadCourses(loadMore = true)
+                    loadCourses()
                 }
             }
     }
@@ -105,14 +162,8 @@ fun CoursesScreen(navController: NavHostController) {
                 CourseCard(
                     cardType = "courses",
                     course = course,
-                    onJoinClick = {
-                        // TODO 进行网络请求
-                        // 将对应课程的 status 改成 "Pending"
-                        val updated = courses.toMutableList()
-                        updated[index] = updated[index].copy(status = "Pending")
-                        courses = updated
-                    },
-                    navController
+                    onJoinClick = {}, //这里不需要这个函数
+                    navController = navController
                 )
             }
 

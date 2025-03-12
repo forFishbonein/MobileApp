@@ -1,6 +1,5 @@
 package com.example.tutoring.ui.screens.student
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,7 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.tutoring.data.Course
+import com.example.tutoring.data.Registration
+import com.example.tutoring.network.ApiService
+import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.student.common.CourseCard
+import com.example.tutoring.utils.ErrorNotifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -44,37 +47,52 @@ fun HomeScreen() {
     var page by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var courses by remember { mutableStateOf(listOf<Course>()) }
+    var allCourses by remember { mutableStateOf(listOf<Course>()) }
+    var allRegistrations by remember { mutableStateOf(listOf<Registration>()) }
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-
+    val apiService = NetworkClient.createService(ApiService::class.java)
+    val pageSize = 5
+    fun getAllCourses(){
+        scope.launch {
+            try {
+                val response = apiService.listCourses(courseName, subjectName)
+                allCourses = response.data as List<Course>
+                val response2 = apiService.listStudentRegistrations()
+                allRegistrations = response2.data as List<Registration>
+                @Suppress("UNCHECKED_CAST")
+                courses = allCourses.take(pageSize).map { course ->
+                    val matchingRegistration = allRegistrations.find { it.courseId == course.courseId }
+                    course.copy(status = matchingRegistration?.status ?: "")
+                } ?: emptyList()
+                page++
+            } catch (e: Exception) {
+                ErrorNotifier.showError(e.message ?: "Register failed.")
+            }
+        }
+    }
     // 模拟加载数据函数
-    fun loadCourses(loadMore: Boolean = false) {
+    fun loadCourses() {
         // 如果正在加载，直接返回
         if (isLoading) return
         isLoading = true
-
         // 模拟网络请求
         scope.launch {
             delay(1000) // 模拟网络延迟
-
-            // 生成假数据
-            val newCourses = (1..10).map {
-                val index = ((page - 1) * 10) + it
-                Course(
-                    id = index,
-                    courseName = "Course #$index",
-                    subjectName = "Subject #${index % 3 + 1}",
-                    status = ""
-                )
-            }
-
-            if (loadMore) {
-                // 在原有列表后追加
-                courses = courses + newCourses
+// 根据页码计算起始和结束下标
+            val startIndex = (page - 1) * pageSize
+            val endIndex = minOf(startIndex + pageSize, allCourses.size)
+// 截取当前页的数据，如果超出范围则返回空列表
+            val newCourses = if (startIndex < allCourses.size) {
+                allCourses.subList(startIndex, endIndex).map { course ->
+                    val matchingRegistration = allRegistrations.find { it.courseId == course.courseId }
+                    course.copy(status = matchingRegistration?.status ?: "")
+                }
             } else {
-                // 重置列表
-                courses = newCourses
+                emptyList()
             }
+            // 在原有列表后追加
+            courses = courses + newCourses
             page++
             isLoading = false
         }
@@ -82,7 +100,7 @@ fun HomeScreen() {
 
     // 首次进入页面时加载数据
     LaunchedEffect(Unit) {
-        loadCourses(loadMore = false)
+        getAllCourses()
     }
 
     // 触底加载：当列表滚动到末尾时，加载下一页
@@ -90,7 +108,7 @@ fun HomeScreen() {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
                 if (!isLoading && lastVisibleItemIndex == courses.lastIndex) {
-                    loadCourses(loadMore = true)
+                    loadCourses()
                 }
             }
     }
@@ -131,7 +149,7 @@ fun HomeScreen() {
                 // TODO 点击搜索时，重置页码并重新加载数据
                 page = 1
                 courses = emptyList()
-                loadCourses(loadMore = false)
+                getAllCourses()
             },
             modifier = Modifier.align(Alignment.End)
         ) {
@@ -152,10 +170,22 @@ fun HomeScreen() {
                     course = course,
                     onJoinClick = {
                         // TODO 进行网络请求
-                        // 将对应课程的 status 改成 "Pending"
-                        val updated = courses.toMutableList()
-                        updated[index] = updated[index].copy(status = "Pending")
-                        courses = updated
+                        scope.launch {
+                            try {
+                                val requestBody = mapOf(
+                                    "courseId" to course.courseId,
+                                )
+                                val response = apiService.registerCourse(requestBody)
+                                ErrorNotifier.showSuccess("Apply Successful! Please wait for the tutor to confirm.")
+                                // 将对应课程的 status 改成 "Pending"
+                                // TODO 这里对象类型的修改方式和 React 差不多，都是要先深拷贝一份
+                                val updated = courses.toMutableList()
+                                updated[index] = updated[index].copy(status = "pending")
+                                courses = updated
+                            } catch (e: Exception) {
+                                ErrorNotifier.showError(e.message ?: "Join Failed.")
+                            }
+                        }
                     }
                 )
             }

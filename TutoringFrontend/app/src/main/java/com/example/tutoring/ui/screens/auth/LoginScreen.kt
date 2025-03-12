@@ -81,34 +81,45 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                scope.launch {
-                    try {
-                        // 构造请求体
-                        val requestBody = mapOf(
-                            "email" to email,
-                            "password" to password,
-                        )
-                        // 调用接口
-                        val response = apiService.login(requestBody)
-                        val role = Role.valueOf(response.data?.role?.uppercase())
-                        val token = response.data.token
-                        // 调用接口
-                        val response2 = apiService.getMyProfile(token)
+                if (email.isBlank() || password.isBlank()) {
+                    ErrorNotifier.showError("Please fill all fields")
+                } else {
+                    scope.launch {
+                        try {
+                            // 构造请求体
+                            val requestBody = mapOf(
+                                "email" to email,
+                                "password" to password,
+                            )
+                            // 调用接口
+                            val response = apiService.login(requestBody)
+//                        val role = Role.valueOf(response.data?.role?.uppercase())
+//                        val token = response.data.token
+                            @Suppress("UNCHECKED_CAST")
+                            val role = Role.valueOf((response.data as Map<String, Any>)["role"].toString().uppercase())
 
-                        // 存储用户数据等后续操作
+                            @Suppress("UNCHECKED_CAST")
+                            val token = (response.data as Map<String, Any>)["token"].toString()
+
+                            // 调用接口
+                            val response2 = apiService.getMyProfile("Bearer $token")
+
+                            // 存储用户数据等后续操作
 //                        val info = mutableMapOf<String, Any>().apply {
 //                            put("name", email.ifBlank { "张三" })
 //                            put("age", 20)
 //                        }
-                        val info = response2.data
-                        if (info != null) {
-                            saveUserData(context, role.name, token, info)
-                            onLoginSuccess(role)
-                        }else{
+                            val info = response2.data
+                            if (info != null) {
+                                saveUserData(context, role.name, token, info)
+                                onLoginSuccess(role)
+                                ErrorNotifier.showSuccess( "Login successful!")
+                            }else{
+                                ErrorNotifier.showError( "Login failed.")
+                            }
+                        } catch (e: Exception) {
                             ErrorNotifier.showError(e.message ?: "Login failed.")
                         }
-                    } catch (e: Exception) {
-                        ErrorNotifier.showError(e.message ?: "Login failed.")
                     }
                 }
             },

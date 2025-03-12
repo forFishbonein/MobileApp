@@ -5,15 +5,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +35,7 @@ import com.example.tutoring.data.Course
 fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, navController: NavHostController? = null) {
     // 新增展开状态
     var expanded by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // 阴影从8dp改为2dp
@@ -58,12 +63,12 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "Subject: ${course.subjectName}",
+                    text = "Subject: ${course.subject}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 if (course.status.isNotBlank() && cardType=="home") {
                     Text(
-                        text = course.status,
+                        text = "Status: ${course.status}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -72,10 +77,12 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                     text = if (expanded) "Less Info" else "More Info...",
                     style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.Underline),
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.align(Alignment.Start).clickable {
-                        // 处理点击事件
-                        expanded = !expanded
-                    }
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .clickable {
+                            // 处理点击事件
+                            expanded = !expanded
+                        }
                 )
             }
             // 将按钮和状态标签放在同一个 Row
@@ -86,11 +93,12 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                 if(cardType=="home"){
                     Button(
                         onClick = {
-                            // 触发加入课程逻辑
-                            onJoinClick()
+                            // 先显示确认对话框
+                            showConfirmDialog = true
                         },
                         shape = RoundedCornerShape(50),
-                        enabled = course.status.isBlank() || course.status == "Rejected",
+//                        enabled = course.status.isBlank() || course.status == "rejected",
+                        enabled = course.status.isBlank(),
                     ) {
                         Text("Join")
                     }
@@ -98,7 +106,7 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                     Button(
                         onClick = {
                             // 跳转到 lessons
-                            navController?.navigate("student_lessons/${course.id}")
+                            navController?.navigate("student_lessons/${course.courseId}")
                         },
                         shape = RoundedCornerShape(50),
                     ) {
@@ -111,12 +119,54 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
 
         // 展开区域
         if (expanded) {
-            // 这里展示更多信息，可根据需要修改
+            if(cardType=="home"){
+                // 这里展示更多信息，可根据需要修改
+                Text(
+                    text = "TutorName: ${if (course.teacherName.isNullOrBlank()) "Not available" else course.teacherName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                )
+            }
             Text(
-                text = "Detailed course information goes here...",
+                text = "Description: ${course.description}",
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+                modifier = Modifier
+                    .padding(start = 16.dp)
             )
+            Text(
+                text = "Create Time: ${if (course.createdAt.isNullOrBlank()) "Not available" else course.createdAt}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
         }
+    }
+    // 显示确认对话框
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you want to join this course?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // 用户确认后调用 onJoinClick() 并关闭对话框
+                        onJoinClick()
+                        showConfirmDialog = false
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showConfirmDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

@@ -37,7 +37,7 @@ fun LessonCard(
 
             // 富文本内容
             val encodedHtml = URLEncoder
-                .encode(lesson.contentHtml, StandardCharsets.UTF_8.toString())
+                .encode(lesson.content, StandardCharsets.UTF_8.toString())
                 .replace("+", "%20")
             // 使用 WebView 显示 HTML
             val webViewState = rememberWebViewState(

@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.tutoring.data.Lesson
 import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.utils.ErrorNotifier
@@ -42,22 +42,35 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
+data class LessonRequest(
+    val isCompleted: Boolean = false,
+    val content: String = "",
+    val courseId: Int = 0,
+    val imageUrls: String = "",
+    val pdfUrls: String = "",
+    val title: String = "",
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLessonScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    courseId: Int?,
+    lesson: Lesson?
 ) {
+    // TODO 首次进入页面时根据 id 是否存在判断更新还是新增
+    val isUpdate = courseId == -1
     val context = androidx.compose.ui.platform.LocalContext.current
-    // 标题
-    var lessonTitle by remember { mutableStateOf("") }
-    // 多行文本框内容
-    var contentText by remember { mutableStateOf("") }
-    // 记录上传后图片和 PDF 的链接（这里用 URI.toString() 代替真实链接）
-    var imageUrls by remember { mutableStateOf(listOf<String>()) }
-    var pdfUrls by remember { mutableStateOf(listOf<String>()) }
+    // 初始化各状态变量
+    var lessonTitle by remember { mutableStateOf(lesson?.title ?: "") }
+    var contentText by remember { mutableStateOf(lesson?.content ?: "") }
+    var imageUrls by remember { mutableStateOf(lesson?.imageUrls?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()) }
+    var pdfUrls by remember { mutableStateOf(lesson?.pdfUrls?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()) }
 
     val coroutineScope = rememberCoroutineScope()
     val apiService = NetworkClient.createService(ApiService::class.java)
+
+
 
     // 图片选择器：允许用户选择图片
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -85,6 +98,7 @@ fun AddLessonScreen(
                             val response = apiService.uploadImage(multipartPart)
                             // 上传成功，将返回的图片 URL 添加到列表中
                             imageUrls = imageUrls + response.data.toString()
+                            ErrorNotifier.showSuccess("Upload Successful!")
                         } catch (e: Exception) {
                             ErrorNotifier.showError("Upload exception: ${e.message}")
                         }
@@ -126,6 +140,7 @@ fun AddLessonScreen(
                             val response = apiService.uploadPdf(multipartPart)
                             // 上传成功，将返回的 PDF URL 添加到列表中
                             pdfUrls = pdfUrls + response.data.toString()
+                            ErrorNotifier.showSuccess("Upload Successful!")
                         } catch (e: Exception) {
                             ErrorNotifier.showError("Upload exception: ${e.message}")
                         }
@@ -184,7 +199,6 @@ fun AddLessonScreen(
                 if (imageUrls.isNotEmpty()) {
                     Card(
                         shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -231,7 +245,7 @@ fun AddLessonScreen(
                 if (pdfUrls.isNotEmpty()) {
                     Card(
                         shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -240,7 +254,9 @@ fun AddLessonScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Uploaded PDFs:", style = MaterialTheme.typography.titleMedium)
                             // 遍历 pdfUrls，显示为可点击的链接
-                            pdfUrls.forEach { url ->
+                            pdfUrls.forEachIndexed { index, url ->
+                                // 获取下划线后面的部分作为文件名
+                                val fileName = url.substringAfterLast("_")
                                 TextButton(
                                     onClick = {
                                         // 点击后打开浏览器查看 PDF，这里使用 Android 的 Intent 方式
@@ -250,7 +266,8 @@ fun AddLessonScreen(
                                         context.startActivity(intent)
                                     }
                                 ) {
-                                    Text(url, style = MaterialTheme.typography.bodySmall)
+                                    // 显示形如: "1. myfile.pdf"
+                                    Text("${index + 1}. $fileName", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -262,12 +279,60 @@ fun AddLessonScreen(
         // 提交按钮
         Button(
             onClick = {
-                // 此处调用后端 API，提交 contentText, imageUrls, pdfUrls
-//                    onLessonAdded()
+                if(!isUpdate){
+                    coroutineScope.launch {
+                        try {
+                            val lessonRequest = courseId?.let {
+                                Lesson(
+                                    completed = false,
+                                    content = contentText,  // 填写实际内容
+                                    courseId = it,                    // 根据实际情况设置 courseId
+                                    title = lessonTitle,        // 设置标题等
+                                    imageUrls = imageUrls.joinToString(separator = ","),
+                                    pdfUrls = pdfUrls.joinToString(separator = ",")
+                                )
+                            }
+                            if (lessonRequest != null) {
+                                val response = apiService.createLesson(lessonRequest)
+                                ErrorNotifier.showSuccess("Create Lesson Successful!")
+                                navController.popBackStack() //退回到上一页
+                            }else{
+                                ErrorNotifier.showError( "Create Failed.")
+                            }
+                        } catch (e: Exception) {
+                            ErrorNotifier.showError(e.message ?: "Create Failed.")
+                        }
+                    }
+                }else{
+                    coroutineScope.launch {
+                        try {
+                            val lessonRequest = lesson?.let {
+                                LessonRequest(
+                                    isCompleted = it.completed,
+                                    content = contentText,  // 填写实际内容
+                                    courseId = it.courseId,                    // 根据实际情况设置 courseId
+                                    title = lessonTitle,        // 设置标题等
+                                    imageUrls = imageUrls.joinToString(separator = ","),
+                                    pdfUrls = pdfUrls.joinToString(separator = ",")
+                                )
+                            }
+
+                            if (lessonRequest != null) {
+                                val response = apiService.updateLesson(lessonRequest, lesson.lessonId)
+                                ErrorNotifier.showSuccess("Update Lesson Successful!")
+                                navController.popBackStack() //退回到上一页
+                            }else{
+                                ErrorNotifier.showError( "Update Failed.")
+                            }
+                        } catch (e: Exception) {
+                            ErrorNotifier.showError(e.message ?: "Update Failed.")
+                        }
+                    }
+                }
             },
             modifier = Modifier.align(Alignment.End)
         ) {
-            Text("Submit Lesson")
+            Text( text = if (isUpdate) "Update Lesson" else "Submit Lesson")
         }
     }
 }

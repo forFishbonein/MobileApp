@@ -39,7 +39,7 @@ fun TutorMainScreen(onLoginOut: () -> Unit) {
                 ),
                 navigationIcon = {
                     // 只有当当前路由以 "lessons" 开头时，才显示返回箭头
-                    if (currentRoute?.startsWith("tutor_lessons") == true) {
+                    if (currentRoute?.startsWith("tutor_lessons") == true || currentRoute?.startsWith("tutor_add_lesson") == true) {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
