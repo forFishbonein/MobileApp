@@ -36,7 +36,7 @@ fun LessonCardTutor(
     courseId: Int?,
     navController: NavHostController
 ) {
-    var currentStatus by remember { mutableStateOf(lesson.completed) }
+//    var currentStatus by remember { mutableStateOf(lesson.completed) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val apiService = NetworkClient.createService(ApiService::class.java)
@@ -158,14 +158,14 @@ fun LessonCardTutor(
                         showConfirmDialog = true
                     },
                     shape = RoundedCornerShape(50),
-                    enabled = !currentStatus
+                    enabled = !lesson.completed
                 ) {
                     Text("Mark as Completed")
                 }
             }
             // 显示当前状态
             Text(
-                text = "Status: ${if (currentStatus) "completed" else "in progress"}",
+                text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.align(Alignment.End).padding(top = 4.dp)

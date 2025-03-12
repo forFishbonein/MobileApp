@@ -108,7 +108,6 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController) {
 
                 Button(
                     onClick = {
-                        // 点击跳转到下一课时，仅当当前 lesson 的状态为 "completed" 时允许
                         if (pagerState.currentPage < lessons.size - 1) {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
