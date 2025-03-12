@@ -6,10 +6,10 @@ import com.tutoring.entity.LessonProgress;
 
 public interface LessonProgressService extends IService<LessonProgress> {
     /**
-     * 学生标记指定 Lesson 为已完成
+     * Teacher 标记指定 Lesson 下所有学生的进度为已完成
      *
-     * @param studentId 当前学生ID
+     * @param teacherId 当前教师ID
      * @param lessonId  Lesson ID
      */
-    void markLessonCompleted(Long studentId, Long lessonId);
+    void markLessonCompletedForAllStudents(Long teacherId, Long lessonId);
 }
