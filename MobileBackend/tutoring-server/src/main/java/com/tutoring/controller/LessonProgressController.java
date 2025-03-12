@@ -19,20 +19,20 @@ public class LessonProgressController {
     private LessonProgressService lessonProgressService;
 
     /**
-     * POST /lesson/progress/{lessonId}/complete
-     * 学生标记 Lesson 为已完成
+     * POST /lessonProgress/{lessonId}/complete
+     * Teacher 标记该 Lesson 下所有选课学生的进度为已完成
      */
     @PostMapping("/{lessonId}/complete")
     public RestResult<?> completeLesson(@PathVariable Long lessonId) {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
+        Long currentTeacherId = SecurityUtils.getCurrentUserId();
+        if (currentTeacherId == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
         }
-        if (SecurityUtils.getCurrentUserRole() != User.Role.student) {
-            throw new CustomException(ErrorCode.FORBIDDEN, "Only students can mark lessons as complete.");
+        if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
+            throw new CustomException(ErrorCode.FORBIDDEN, "Only Teachers can mark lessons as complete.");
         }
-        lessonProgressService.markLessonCompleted(currentUserId, lessonId);
-        return RestResult.success(null, "Lesson marked as completed.");
+        lessonProgressService.markLessonCompletedForAllStudents(currentTeacherId, lessonId);
+        return RestResult.success(null, "Lesson marked as completed for all enrolled students.");
     }
 }
 
