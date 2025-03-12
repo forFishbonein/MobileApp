@@ -31,7 +31,6 @@ fun TutorNavHost(navController: NavHostController,onLoginOut: () -> Unit) {
             arguments = listOf(navArgument("courseId") { type = NavType.IntType })
         ) { backStackEntry ->
             val courseId = backStackEntry.arguments?.getInt("courseId")
-            // 调用 LessonsScreen(courseId)
             LessonsScreen(courseId, navController)
         }
         composable(
@@ -39,17 +38,18 @@ fun TutorNavHost(navController: NavHostController,onLoginOut: () -> Unit) {
             arguments = listOf(
                 navArgument("courseId") {
                     type = NavType.IntType
-                    defaultValue = -1  // -1 表示没有传递 courseId
+                    defaultValue = -1  // -1 indicates that the courseId is not passed
                 },
                 navArgument("lesson") {
                     type = NavType.StringType
-                    defaultValue = ""  // 空字符串表示没有传递 lesson 对象
+                    defaultValue = ""  // An empty string indicates that no lesson object was passed
                 }
             )
         ) { backStackEntry ->
+            // Serialize back the Lesson object from the string
             val courseId = backStackEntry.arguments?.getInt("courseId")
             val encodedLesson = backStackEntry.arguments?.getString("lesson") ?: ""
-            val lessonJson = URLDecoder.decode(encodedLesson, "UTF-8")  // 恢复空格
+            val lessonJson = URLDecoder.decode(encodedLesson, "UTF-8")
             val lesson: Lesson? = if (lessonJson.isNotBlank()) {
                 Gson().fromJson(lessonJson, Lesson::class.java)
             } else null

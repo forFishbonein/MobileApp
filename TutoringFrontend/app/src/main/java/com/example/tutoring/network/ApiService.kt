@@ -16,13 +16,11 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-//data class LoginRequest(val username: String, val password: String)
-//data class CommonResponse<T>(val code: Int, val message: String, val data: T)
-// 定义一个通用响应结构，不需要为 data 部分单独建类
+// Define a common response structure
 data class CommonResponse(
     val code: Int,
     val message: String,
-//    val data: Map<String, Any>?
+// val data: Map<String, Any>?
     val data: Any?
 )
 data class SpecialResponse<T>(
@@ -44,8 +42,7 @@ interface ApiService {
 
     @GET("/user/me")
     suspend fun getMyProfile(@Header("Authorization") token: String): CommonResponse
-//    val token = "your_token_here" // 如 "Bearer xxx"
-//    val response = apiService.getMyProfile("Bearer $token")
+
     @PUT("/user/me")
     suspend fun updateMyProfile(@Body request: Map<String, String>): CommonResponse
 
@@ -54,8 +51,6 @@ interface ApiService {
     suspend fun uploadAvatar(
         @Part file: MultipartBody.Part
     ): CommonResponse
-
-
 
     @GET("/course/list")
     suspend fun listCourses(
@@ -108,19 +103,17 @@ interface ApiService {
         @Path("lessonId") lessonId: Int
     ): CommonResponse
 
-
     @Multipart
-    @POST("/oss/uploadImage") // 根据后端实际接口地址修改
+    @POST("/oss/uploadImage")
     suspend fun uploadImage(
         @Part file: MultipartBody.Part
     ): CommonResponse
 
     @Multipart
-    @POST("/oss/uploadPdf") // 根据后端实际接口地址修改
+    @POST("/oss/uploadPdf")
     suspend fun uploadPdf(
         @Part file: MultipartBody.Part
     ): CommonResponse
-
 
     //data science
     @GET("/course/{courseId}/progress")

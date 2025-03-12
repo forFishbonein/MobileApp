@@ -58,10 +58,10 @@ fun AddLessonScreen(
     courseId: Int?,
     lesson: Lesson?
 ) {
-    // TODO 首次进入页面时根据 id 是否存在判断更新还是新增
+    // Check whether the id is -1 when you enter the page for the first time to determine whether the page is updated or added
     val isUpdate = courseId == -1
     val context = androidx.compose.ui.platform.LocalContext.current
-    // 初始化各状态变量
+    // Initializes each state variable
     var lessonTitle by remember { mutableStateOf(lesson?.title ?: "") }
     var contentText by remember { mutableStateOf(lesson?.content ?: "") }
     var imageUrls by remember { mutableStateOf(lesson?.imageUrls?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()) }
@@ -72,21 +72,21 @@ fun AddLessonScreen(
 
 
 
-    // 图片选择器：允许用户选择图片
+    // Image selector: Allows users to select images
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             uri?.let {
                 val mimeType = context.contentResolver.getType(it) ?: "application/octet-stream"
-                val extension = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "jpg"
-
-                // 使用 ContentResolver 读取文件内容
+                val extension = android.webkit.MimeTypeMap.getSingleton()
+                    .getExtensionFromMimeType(mimeType) ?: "jpg"
+                // Use ContentResolver to read the contents of the file
                 val inputStream = context.contentResolver.openInputStream(it)
                 val fileBytes = inputStream?.readBytes()
                 inputStream?.close()
 
                 if (fileBytes != null) {
-                    // 构建 RequestBody 和 MultipartBody.Part，根据动态 MIME 类型生成
+                    // Build RequestBody and MultipartBody.Part, generated from a dynamic MIME type
                     val requestBody = fileBytes.toRequestBody(mimeType.toMediaTypeOrNull())
                     val multipartPart = MultipartBody.Part.createFormData(
                         "file",
@@ -96,7 +96,7 @@ fun AddLessonScreen(
                     coroutineScope.launch {
                         try {
                             val response = apiService.uploadImage(multipartPart)
-                            // 上传成功，将返回的图片 URL 添加到列表中
+                            // After the upload succeeds, the URL of the returned image is added to the list
                             imageUrls = imageUrls + response.data.toString()
                             ErrorNotifier.showSuccess("Upload Successful!")
                         } catch (e: Exception) {
@@ -110,25 +110,24 @@ fun AddLessonScreen(
         }
     )
 
-    // PDF 文件选择器
-// PDF 文件选择器
+    // PDF file selector
     val pdfPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             uri?.let {
-                // 获取 MIME 类型，默认 "application/pdf"
+                // Gets MIME type, default "application/pdf"
                 val mimeType = context.contentResolver.getType(it) ?: "application/pdf"
-                // 根据 MIME 类型获取扩展名，默认 "pdf"
+                // Get extension based on MIME type, default "pdf"
                 val extension = android.webkit.MimeTypeMap.getSingleton()
                     .getExtensionFromMimeType(mimeType) ?: "pdf"
 
-                // 使用 ContentResolver 读取文件内容
+                // Use ContentResolver to read the contents of the file
                 val inputStream = context.contentResolver.openInputStream(it)
                 val fileBytes = inputStream?.readBytes()
                 inputStream?.close()
 
                 if (fileBytes != null) {
-                    // 构建 RequestBody 和 MultipartBody.Part
+                    // Build the RequestBody and MultipartBody.Part
                     val requestBody = fileBytes.toRequestBody(mimeType.toMediaTypeOrNull())
                     val multipartPart = MultipartBody.Part.createFormData(
                         "file",
@@ -138,7 +137,7 @@ fun AddLessonScreen(
                     coroutineScope.launch {
                         try {
                             val response = apiService.uploadPdf(multipartPart)
-                            // 上传成功，将返回的 PDF URL 添加到列表中
+                            // After the upload is successful, the returned PDF URL is added to the list
                             pdfUrls = pdfUrls + response.data.toString()
                             ErrorNotifier.showSuccess("Upload Successful!")
                         } catch (e: Exception) {
@@ -155,11 +154,10 @@ fun AddLessonScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // 允许滚动
+            .verticalScroll(rememberScrollState()) // Roll enabled
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 标题输入框
         OutlinedTextField(
             value = lessonTitle,
             onValueChange = { lessonTitle = it },
@@ -167,7 +165,6 @@ fun AddLessonScreen(
             modifier = Modifier
                 .fillMaxWidth()
         )
-        // 多行文本框（内容编辑区域）
         OutlinedTextField(
             value = contentText,
             onValueChange = { contentText = it },
@@ -178,8 +175,8 @@ fun AddLessonScreen(
                 .padding(top = 8.dp)
         )
         Card(
-            shape = RoundedCornerShape(16.dp), // 圆角更大，风格更柔和
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), // 阴影稍微重一点，但不过分
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -188,14 +185,14 @@ fun AddLessonScreen(
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp) // 控制内部间距
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
                     onClick = { imagePickerLauncher.launch("image/*") },
                 ) {
                     Text("Upload Image")
                 }
-                // 显示上传后的图片区域
+                // Displays the uploaded image area
                 if (imageUrls.isNotEmpty()) {
                     Card(
                         shape = RoundedCornerShape(8.dp),
@@ -206,7 +203,7 @@ fun AddLessonScreen(
                         Column(modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Uploaded Images:", style = MaterialTheme.typography.titleMedium)
-                            // 遍历 imageUrls，使用 Coil AsyncImage 显示图片
+                            // Loop through the imageUrls and display the image using Coil AsyncImage
                             imageUrls.forEach { url ->
                                 AsyncImage(
                                     model = url,
@@ -223,8 +220,8 @@ fun AddLessonScreen(
             }
         }
         Card(
-            shape = RoundedCornerShape(16.dp), // 圆角更大，风格更柔和
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), // 阴影稍微重一点，但不过分
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -233,19 +230,17 @@ fun AddLessonScreen(
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp) // 控制内部间距
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
                     onClick = { pdfPickerLauncher.launch("application/pdf") },
-//                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Upload PDF")
                 }
-                // 显示上传后的 PDF 区域
+                // Displays the uploaded PDF area
                 if (pdfUrls.isNotEmpty()) {
                     Card(
                         shape = RoundedCornerShape(8.dp),
-//                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -253,20 +248,17 @@ fun AddLessonScreen(
                         Column(modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Uploaded PDFs:", style = MaterialTheme.typography.titleMedium)
-                            // 遍历 pdfUrls，显示为可点击的链接
+                            // Traverse the pdfUrls and display them as clickable links
                             pdfUrls.forEachIndexed { index, url ->
-                                // 获取下划线后面的部分作为文件名
                                 val fileName = url.substringAfterLast("_")
                                 TextButton(
                                     onClick = {
-                                        // 点击后打开浏览器查看 PDF，这里使用 Android 的 Intent 方式
                                         val intent = Intent(Intent.ACTION_VIEW).apply {
                                             data = Uri.parse(url)
                                         }
                                         context.startActivity(intent)
                                     }
                                 ) {
-                                    // 显示形如: "1. myfile.pdf"
                                     Text("${index + 1}. $fileName", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
@@ -276,7 +268,6 @@ fun AddLessonScreen(
             }
         }
 
-        // 提交按钮
         Button(
             onClick = {
                 if(!isUpdate){
@@ -285,9 +276,9 @@ fun AddLessonScreen(
                             val lessonRequest = courseId?.let {
                                 Lesson(
                                     completed = false,
-                                    content = contentText,  // 填写实际内容
-                                    courseId = it,                    // 根据实际情况设置 courseId
-                                    title = lessonTitle,        // 设置标题等
+                                    content = contentText,
+                                    courseId = it,
+                                    title = lessonTitle,
                                     imageUrls = imageUrls.joinToString(separator = ","),
                                     pdfUrls = pdfUrls.joinToString(separator = ",")
                                 )
@@ -295,7 +286,7 @@ fun AddLessonScreen(
                             if (lessonRequest != null) {
                                 val response = apiService.createLesson(lessonRequest)
                                 ErrorNotifier.showSuccess("Create Lesson Successful!")
-                                navController.popBackStack() //退回到上一页
+                                navController.popBackStack() //Go back to previous page
                             }else{
                                 ErrorNotifier.showError( "Create Failed.")
                             }
@@ -309,9 +300,9 @@ fun AddLessonScreen(
                             val lessonRequest = lesson?.let {
                                 LessonRequest(
                                     isCompleted = it.completed,
-                                    content = contentText,  // 填写实际内容
-                                    courseId = it.courseId,                    // 根据实际情况设置 courseId
-                                    title = lessonTitle,        // 设置标题等
+                                    content = contentText,
+                                    courseId = it.courseId,
+                                    title = lessonTitle,
                                     imageUrls = imageUrls.joinToString(separator = ","),
                                     pdfUrls = pdfUrls.joinToString(separator = ",")
                                 )
@@ -320,7 +311,7 @@ fun AddLessonScreen(
                             if (lessonRequest != null) {
                                 val response = apiService.updateLesson(lessonRequest, lesson.lessonId)
                                 ErrorNotifier.showSuccess("Update Lesson Successful!")
-                                navController.popBackStack() //退回到上一页
+                                navController.popBackStack() //Go back to previous page
                             }else{
                                 ErrorNotifier.showError( "Update Failed.")
                             }

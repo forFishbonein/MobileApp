@@ -51,12 +51,11 @@ fun LessonCardTutor(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 顶部标题
             Text(
                 text = lesson.title,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary, // 使用主题的主色
+                    color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.2.sp,
                     shadow = Shadow(
                         color = Color.Gray,
@@ -69,7 +68,7 @@ fun LessonCardTutor(
 //            val encodedHtml = URLEncoder
 //                .encode(lesson.content, StandardCharsets.UTF_8.toString())
 //                .replace("+", "%20")
-//            // 使用 WebView 显示 HTML
+//            // Use WebView to display HTML
 //            val webViewState = rememberWebViewState(
 //                // data:text/html 指定 MIME 类型为 text/html
 //                url = "data:text/html;charset=utf-8,$encodedHtml"
@@ -100,7 +99,6 @@ fun LessonCardTutor(
                 if (lesson.imageUrls.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant Images:", style = MaterialTheme.typography.bodyMedium)
-                        // 遍历 imageUrls，使用 Coil AsyncImage 显示图片
                         lesson.imageUrls.split(",").forEach { url ->
                             AsyncImage(
                                 model = url,
@@ -115,20 +113,16 @@ fun LessonCardTutor(
                 if (lesson.pdfUrls.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant PDFs:", style = MaterialTheme.typography.bodyMedium)
-                        // 遍历 pdfUrls，显示为可点击的链接
                         lesson.pdfUrls.split(",").forEachIndexed { index, url ->
-                            // 获取下划线后面的部分作为文件名
                             val fileName = url.substringAfterLast("_")
                             TextButton(
                                 onClick = {
-                                    // 点击后打开浏览器查看 PDF，这里使用 Android 的 Intent 方式
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
                                         data = Uri.parse(url)
                                     }
                                     context.startActivity(intent)
                                 }
                             ) {
-                                // 显示形如: "1. myfile.pdf"
                                 Text("${index + 1}. $fileName", style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -136,14 +130,13 @@ fun LessonCardTutor(
                 }
             }
 
-            // 在卡片底部右下角添加按钮
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top=16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(
                     onClick = {
-                        //TODO 使用 ViewModel 共享作用域，而不是路由传参 lesson
+                        //Routing takes lesson, but requires coding first
                         val lessonJson = Gson().toJson(lesson)
                         val encodedLesson = URLEncoder.encode(lessonJson, "UTF-8")
                         navController.navigate("tutor_add_lesson?courseId=${-1}&lesson=$encodedLesson")
@@ -163,7 +156,6 @@ fun LessonCardTutor(
                     Text("Mark as Completed")
                 }
             }
-            // 显示当前状态
             Text(
                 text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
                 style = MaterialTheme.typography.bodyLarge,
@@ -180,8 +172,7 @@ fun LessonCardTutor(
             confirmButton = {
                 Button(
                     onClick = {
-                        // 用户确认后调用接口
-                        onChangeComplete()  // 假设这是你调用接口的方法
+                        onChangeComplete()
                         showConfirmDialog = false
                     }
                 ) {

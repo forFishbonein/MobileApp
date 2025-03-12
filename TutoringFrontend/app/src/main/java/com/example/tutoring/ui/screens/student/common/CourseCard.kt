@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.tutoring.data.Course
 
-// 课程卡片
 @Composable
 fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, navController: NavHostController? = null) {
     // 新增展开状态
@@ -38,10 +37,10 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
     var showConfirmDialog by remember { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // 阴影从8dp改为2dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f) // 调低不透明度，让边框更柔和
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f) // Lower the opacity to make the border softer
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -80,12 +79,10 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                     modifier = Modifier
                         .align(Alignment.Start)
                         .clickable {
-                            // 处理点击事件
                             expanded = !expanded
                         }
                 )
             }
-            // 将按钮和状态标签放在同一个 Row
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -93,7 +90,6 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                 if(cardType=="home"){
                     Button(
                         onClick = {
-                            // 先显示确认对话框
                             showConfirmDialog = true
                         },
                         shape = RoundedCornerShape(50),
@@ -105,7 +101,6 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                 }else{
                     Button(
                         onClick = {
-                            // 跳转到 lessons
                             navController?.navigate("student_lessons/${course.courseId}")
                         },
                         shape = RoundedCornerShape(50),
@@ -115,12 +110,9 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
                 }
             }
         }
-        // 添加展开更多信息按钮
 
-        // 展开区域
         if (expanded) {
             if(cardType=="home"){
-                // 这里展示更多信息，可根据需要修改
                 Text(
                     text = "TutorName: ${if (course.teacherName.isNullOrBlank()) "Not available" else course.teacherName}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -143,7 +135,6 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
-    // 显示确认对话框
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -152,7 +143,6 @@ fun CourseCard(cardType:String="home", course: Course, onJoinClick: () -> Unit, 
             confirmButton = {
                 Button(
                     onClick = {
-                        // 用户确认后调用 onJoinClick() 并关闭对话框
                         onJoinClick()
                         showConfirmDialog = false
                     }

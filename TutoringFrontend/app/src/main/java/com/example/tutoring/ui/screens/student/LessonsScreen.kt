@@ -2,10 +2,13 @@ package com.example.tutoring.ui.screens.student
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +27,9 @@ import com.example.tutoring.utils.LoadingViewModel
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPagerApi::class) // Accompanist Pager 注解
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel()) {
-    // 全局加载指示器（overlay）
     if (loadingViewModel.isHttpLoading) {
         Box(
             modifier = Modifier
@@ -38,9 +40,9 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
             CircularProgressIndicator()
         }
     }
-    // TODO 根据courseId去查找对应的 course 内容
+
     var lessons by remember { mutableStateOf(listOf<Lesson>()) }
-    // PagerState 控制当前显示第几页
+    // PagerState controls the number of pages currently displayed
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
     val apiService = NetworkClient.createService(ApiService::class.java)
@@ -48,6 +50,7 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
         coroutineScope.launch {
             loadingViewModel.setLoading(true)
             try {
+                // Find the corresponding course content according to the courseId
                 val response = apiService.listLessons(courseId)
                 lessons = response.data as List<Lesson>
                 loadingViewModel.setLoading(false)
@@ -56,64 +59,57 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
             }
         }
     }
-    // 首次进入页面时加载数据
     LaunchedEffect(Unit) {
         getAllLessons()
     }
-    // 导航按钮 Row
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
-        Button(
-            onClick = {
-                // 点击返回上一课时
-                if (pagerState.currentPage > 0) {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                    }
-                }
-            },
-            enabled = pagerState.currentPage > 0
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Previous Lesson")
-        }
+            Button(
+                onClick = {
+                    if (pagerState.currentPage > 0) {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                        }
+                    }
+                },
+                enabled = pagerState.currentPage > 0
+            ) {
+                Text("Previous Lesson")
+            }
 
-        Button(
-            onClick = {
-                // 点击跳转到下一课时，仅当当前 lesson 的状态为 "completed" 时允许
-                if (pagerState.currentPage < lessons.size - 1 &&
-                    lessons[pagerState.currentPage].completed) {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+            Button(
+                onClick = {
+                    // Click to jump to the next lesson, allowed only if the status of the current lesson is "completed"
+                    if (pagerState.currentPage < lessons.size - 1 &&
+                        lessons[pagerState.currentPage].completed) {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
                     }
-                }
-            },
-            enabled = pagerState.currentPage < lessons.size - 1 &&
-                    lessons[pagerState.currentPage].completed
-        ) {
-            Text("Next Lesson")
+                },
+                enabled = pagerState.currentPage < lessons.size - 1 &&
+                        lessons[pagerState.currentPage].completed
+            ) {
+                Text("Next Lesson")
+            }
         }
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // 创建一个横向 Pager
+        // Create a horizontal Pager
         HorizontalPager(
             state = pagerState,
             count = lessons.size,
-            modifier = Modifier.fillMaxSize().padding(top=48.dp),
-            userScrollEnabled = true // 禁止手势滑动，必须点击按钮
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = false // No gesture swiping, you must click the button
         ) { pageIndex ->
             val lesson = lessons[pageIndex]
-
-            // Card 内容
             LessonCard(
                 lesson = lesson
             )

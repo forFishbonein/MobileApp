@@ -38,12 +38,11 @@ fun LessonCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 顶部标题
             Text(
                 text = lesson.title,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary, // 使用主题的主色
+                    color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.2.sp,
                     shadow = Shadow(
                         color = Color.Gray,
@@ -70,7 +69,7 @@ fun LessonCard(
                 if (lesson.imageUrls.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant Images:", style = MaterialTheme.typography.bodyMedium)
-                        // 遍历 imageUrls，使用 Coil AsyncImage 显示图片
+                        // Loop through the imageUrls and display the image using Coil AsyncImage
                         lesson.imageUrls.split(",").forEach { url ->
                             AsyncImage(
                                 model = url,
@@ -85,27 +84,25 @@ fun LessonCard(
                 if (lesson.pdfUrls.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant PDFs:", style = MaterialTheme.typography.bodyMedium)
-                        // 遍历 pdfUrls，显示为可点击的链接
                         lesson.pdfUrls.split(",").forEachIndexed { index, url ->
-                            // 获取下划线后面的部分作为文件名
+                            // Gets the part after the underscore as the file name
                             val fileName = url.substringAfterLast("_")
                             TextButton(
                                 onClick = {
-                                    // 点击后打开浏览器查看 PDF，这里使用 Android 的 Intent 方式
+                                    // Click and open the browser to view the PDF, using Android Intent mode
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
                                         data = Uri.parse(url)
                                     }
                                     context.startActivity(intent)
                                 }
                             ) {
-                                // 显示形如: "1. myfile.pdf"
+                                // Display like: "1.myfile.pdf"
                                 Text("${index + 1}. $fileName", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
             }
-            // 显示当前状态
             Text(
                 text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
                 style = MaterialTheme.typography.bodyLarge,

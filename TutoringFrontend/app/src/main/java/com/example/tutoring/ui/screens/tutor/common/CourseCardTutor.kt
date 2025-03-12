@@ -33,18 +33,15 @@ import com.example.tutoring.ui.screens.tutor.CourseRegistration
 // 课程卡片
 @Composable
 fun CourseCardTutor(cardType:String="application", course: CourseRegistration, onConfirmClick: (confirm:String) -> Unit, navController: NavHostController? = null) {
-    // 新增展开状态
     var expanded by remember { mutableStateOf(false) }
-    // 控制是否显示“Accept”确认对话框
     var showAcceptDialog by remember { mutableStateOf(false) }
-    // 控制是否显示“Reject”确认对话框
     var showRejectDialog by remember { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // 阴影从8dp改为2dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f) // 调低不透明度，让边框更柔和
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -81,12 +78,10 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                     style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.Underline),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.align(Alignment.Start).clickable {
-                        // 处理点击事件
                         expanded = !expanded
                     }
                 )
             }
-            // 将按钮和状态标签放在同一个 Row
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -94,7 +89,6 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                 if(cardType=="application"){
                     Button(
                         onClick = {
-                            // 触发加入课程逻辑
                             showAcceptDialog = true
                         },
                         shape = RoundedCornerShape(50),
@@ -104,7 +98,6 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                     }
                     Button(
                         onClick = {
-                            // 触发加入课程逻辑
                             showRejectDialog = true
                         },
                         shape = RoundedCornerShape(50),
@@ -115,7 +108,6 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                 }else{
                     Button(
                         onClick = {
-                            // 跳转到 lessons
                             navController?.navigate("tutor_lessons/${course.courseId}")
                         },
                         shape = RoundedCornerShape(50),
@@ -125,11 +117,8 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                 }
             }
         }
-        // 添加展开更多信息按钮
 
-        // 展开区域
         if (expanded) {
-            // 这里展示更多信息，可根据需要修改
             if(cardType=="application"){
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -149,7 +138,7 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                     )
                 }
             }
-            //这里返回值没有 TutorName
+            // The return value does not have a TutorName!
 //            else{
 //                Text(
 //                    text = "TutorName: ${if (course.tutorName.isBlank()) "Not available" else course.tutorName}",
@@ -174,7 +163,8 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
-    // Accept 确认对话框
+
+    //Approve Dialog
     if (showAcceptDialog) {
         AlertDialog(
             onDismissRequest = { showAcceptDialog = false },
@@ -183,8 +173,8 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
             confirmButton = {
                 Button(
                     onClick = {
-                        onConfirmClick("approved")   // 用户确认后调用函数
-                        showAcceptDialog = false  // 关闭对话框
+                        onConfirmClick("approved")
+                        showAcceptDialog = false
                     }
                 ) {
                     Text("Yes")
@@ -198,7 +188,7 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
         )
     }
 
-    // Reject 确认对话框
+    //Reject Dialog
     if (showRejectDialog) {
         AlertDialog(
             onDismissRequest = { showRejectDialog = false },
@@ -207,8 +197,8 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
             confirmButton = {
                 Button(
                     onClick = {
-                        onConfirmClick("rejected")    // 用户确认后调用函数
-                        showRejectDialog = false  // 关闭对话框
+                        onConfirmClick("rejected")
+                        showRejectDialog = false
                     }
                 ) {
                     Text("Yes")

@@ -16,16 +16,14 @@ fun TutorBottomBar(navController: NavHostController) {
     val currentRoute = backStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface, // 可自行调配颜色
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = Color.White
     ) {
         NavBarItems.TutorBarItems.forEach { navItem ->
             NavigationBarItem(
                 selected = currentRoute?.startsWith(navItem.route) == true,
                 onClick = {
-                    // 点击时导航到对应路由
                     navController.navigate(navItem.route) {
-                        // 跳转配置
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

@@ -31,7 +31,7 @@ fun StudentMainScreen(
     val currentRoute = navBackStackEntry?.destination?.route
     Scaffold(
         topBar = {
-            // 根据当前路由决定标题
+            // The title is determined based on the current route
             val titleText = when {
                 currentRoute?.startsWith("student_home") == true -> "Home-Student"
                 currentRoute?.startsWith("student_courses") == true -> "Courses"
@@ -40,15 +40,15 @@ fun StudentMainScreen(
                 else -> "Student"
             }
 
-            // 使用 Material3 TopAppBar，并设置自定义背景色
+            // Use the  Material3 TopAppBar
             TopAppBar(
                 title = { Text(titleText) },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = Color(0xFFEBEBF6), // 示例背景色，可自行替换
+                    containerColor = Color(0xFFEBEBF6),
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
                 navigationIcon = {
-                    // 只有当当前路由以 "lessons" 开头时，才显示返回箭头
+                    // The return arrow is displayed only if the current route begins with "lessons"
                     if (currentRoute?.startsWith("student_lessons") == true) {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(

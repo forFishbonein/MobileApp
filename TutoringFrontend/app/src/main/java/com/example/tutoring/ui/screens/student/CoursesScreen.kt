@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingViewModel = viewModel()) {
-    // 全局加载指示器（overlay）
+    // Global load indicator (overlay)
     if (loadingViewModel.isHttpLoading) {
         Box(
             modifier = Modifier
@@ -52,7 +52,6 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
             CircularProgressIndicator()
         }
     }
-    // 模拟分页数据
     var page by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var courses by remember { mutableStateOf(listOf<Course>()) }
@@ -66,18 +65,16 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
             loadingViewModel.setLoading(true)
             try {
                 val response = apiService.listStudentRegistrations()
+
                 val registrationsList = response.data as List<Registration>
-                // 过滤出来是成功订了的
+                // It filtered out and was successfully ordered
                 allCourses = registrationsList.filter { it.status == "approved" }
 
-                //TODO 这里可以直接拿到最新的allCourses，和 React 不同！
                 @Suppress("UNCHECKED_CAST")
                 courses = allCourses.take(pageSize).map { registration ->
-                    // 请求 detail 接口，根据 courseId 获取课程详情
                     val detailResponse = apiService.getCourseDetail(registration.courseId)
-                    // 假设 detailResponse.data 为 CourseDetail 对象
                     val detail = detailResponse.data as Course
-                    // 合并数据：重复的字段使用 detail 返回的值，保留 registration 中的 status
+                    // Merge data: Duplicate fields use the value returned by detail, leaving status in registration
                     Course(
                         courseId = registration.courseId,
                         courseName = detail.courseName,
@@ -95,26 +92,20 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
             }
         }
     }
-    // 模拟加载数据函数
     fun loadCourses() {
-        // 如果正在加载，直接返回
         if (isLoading) return
         isLoading = true
 
-        // 模拟网络请求
         scope.launch {
-//            delay(1000) // 模拟网络延迟
-// 根据页码计算起始和结束下标
+            //            delay(1000)
+            // Calculate starting and ending subscripts based on page numbers
             val startIndex = (page - 1) * pageSize
             val endIndex = minOf(startIndex + pageSize, allCourses.size)
-// 截取当前页的数据，如果超出范围则返回空列表
+            // Intercepts the data of the current page and returns an empty list if it is out of range
             val newCourses = if (startIndex < allCourses.size) {
                 allCourses.subList(startIndex, endIndex).map { registration ->
-                    // 请求 detail 接口，根据 courseId 获取课程详情
                     val detailResponse = apiService.getCourseDetail(registration.courseId)
-                    // 假设 detailResponse.data 为 CourseDetail 对象
                     val detail = detailResponse.data as Course
-                    // 合并数据：重复的字段使用 detail 返回的值，保留 registration 中的 status
                     Course(
                         courseId = registration.courseId,
                         courseName = detail.courseName,
@@ -128,11 +119,11 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
             } else {
                 emptyList()
             }
-            // 在原有列表后追加
+            // Appends to the original list
             courses = courses + newCourses
             page++
             isLoading = false
-//            // 生成假数据
+//            // Generate fake data
 //            val newCourses = (1..10).map {
 //                val index = ((page - 1) * 10) + it
 //                Course(
@@ -143,16 +134,15 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
 //                )
 //            }
 
-
         }
     }
 
-    // 首次进入页面时加载数据
+    // Load data the first time you enter the page
     LaunchedEffect(Unit) {
         getAllCourses()
     }
 
-    // 触底加载：当列表滚动到末尾时，加载下一页
+    // Bottom load: When the list rolls to the end, the next page is loaded
     LaunchedEffect(lazyListState) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
@@ -180,12 +170,12 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                 CourseCard(
                     cardType = "courses",
                     course = course,
-                    onJoinClick = {}, //这里不需要这个函数
+                    onJoinClick = {},
                     navController = navController
                 )
             }
 
-            // 底部加载中提示
+            // Bottom loading prompts
             if (isLoading) {
                 item {
                     Row(

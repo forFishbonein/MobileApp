@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
-    // 全局加载指示器（overlay）
     if (loadingViewModel.isHttpLoading) {
         Box(
             modifier = Modifier
@@ -54,11 +53,9 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             CircularProgressIndicator()
         }
     }
-    // 状态管理
     var courseName by remember { mutableStateOf("") }
     var subjectName by remember { mutableStateOf("") }
 
-    // 模拟分页数据
     var page by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var courses by remember { mutableStateOf(listOf<Course>()) }
@@ -88,18 +85,13 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
         }
     }
-    // 模拟加载数据函数
     fun loadCourses() {
-        // 如果正在加载，直接返回
         if (isLoading) return
         isLoading = true
-        // 模拟网络请求
         scope.launch {
-            delay(1000) // 模拟网络延迟
-// 根据页码计算起始和结束下标
+            delay(1000)
             val startIndex = (page - 1) * pageSize
             val endIndex = minOf(startIndex + pageSize, allCourses.size)
-// 截取当前页的数据，如果超出范围则返回空列表
             val newCourses = if (startIndex < allCourses.size) {
                 allCourses.subList(startIndex, endIndex).map { course ->
                     val matchingRegistration = allRegistrations.find { it.courseId == course.courseId }
@@ -108,19 +100,16 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             } else {
                 emptyList()
             }
-            // 在原有列表后追加
             courses = courses + newCourses
             page++
             isLoading = false
         }
     }
 
-    // 首次进入页面时加载数据
     LaunchedEffect(Unit) {
         getAllCourses()
     }
 
-    // 触底加载：当列表滚动到末尾时，加载下一页
     LaunchedEffect(lazyListState) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
@@ -135,11 +124,10 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // 搜索区域
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp), // 内部留一点间距
+                .padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -163,7 +151,7 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
 
         Button(
             onClick = {
-                // TODO 点击搜索时，重置页码并重新加载数据
+                // When you click Search, you reset the page number and reload the data
                 page = 1
                 courses = emptyList()
                 getAllCourses()
@@ -186,7 +174,6 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 CourseCard(
                     course = course,
                     onJoinClick = {
-                        // TODO 进行网络请求
                         scope.launch {
                             try {
                                 val requestBody = mapOf(
@@ -194,8 +181,7 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                                 )
                                 val response = apiService.registerCourse(requestBody)
                                 ErrorNotifier.showSuccess("Apply Successful! Please wait for the tutor to confirm.")
-                                // 将对应课程的 status 改成 "Pending"
-                                // TODO 这里对象类型的修改方式和 React 差不多，都是要先深拷贝一份
+                                // Change the status of the corresponding course to "Pending"
                                 val updated = courses.toMutableList()
                                 updated[index] = updated[index].copy(status = "pending")
                                 courses = updated
@@ -207,7 +193,6 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 )
             }
 
-            // 底部加载中提示
             if (isLoading) {
                 item {
                     Row(

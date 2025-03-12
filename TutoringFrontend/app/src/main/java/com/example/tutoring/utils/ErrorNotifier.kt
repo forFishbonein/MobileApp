@@ -36,10 +36,10 @@ object ErrorNotifier {
 //try {
 //    val result = apiService.getData()
 //} catch (e: Exception) {
-//    ErrorNotifier.showError("数据加载失败，请稍后重试")
+//    ErrorNotifier.showError("Failed.")
 //}
 
-// TODO 用法
+// // Usage
 //ErrorNotifier.showError(message, useDialog = true)
 
 

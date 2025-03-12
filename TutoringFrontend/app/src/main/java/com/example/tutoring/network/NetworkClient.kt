@@ -11,23 +11,21 @@ import java.util.concurrent.TimeUnit
 object NetworkClient {
     private lateinit var appContext: Context
 
-    // 调用这个方法初始化 NetworkClient，一般在 Application 或 MainActivity 的 onCreate 中调用
+    // Call this method to initialize NetworkClient, which is called in onCreate of MainActivity
     fun initialize(context: Context) {
         appContext = context.applicationContext
     }
-    // baseURL 可配置，也可写死
-//    private const val BASE_URL = "http://10.126.72.228:8080" // 假设你的Spring Boot后端跑在本地
-//    private const val BASE_URL = "http://localhost:8080" // 假设你的Spring Boot后端跑在本地
-    private const val BASE_URL = "http://10.0.2.2:8080" // 假设你的Spring Boot后端跑在本地
+//    private const val BASE_URL = "http://10.126.72.228:8080" // wifi ipv4 address for real phone
+    //    private const val BASE_URL = "http://localhost:8080"
+    private const val BASE_URL = "http://10.0.2.2:8080" // The emulator needs to be mapped to localhost using 10.0.2.2
 
-    // 提供给外部设置 token 的地方
-    // 每次调用时都会从 SharedPreferences 读取最新的 "token" 值
+    // Provide a place for external token setup
     var tokenProvider: () -> String? = {
         val sharedPrefs = appContext.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         sharedPrefs.getString("token", null)
     }
 
-    // 用于处理全局错误提示
+    // This command is used to handle global error messages
     var errorHandler: (String) -> Unit = { msg -> ErrorNotifier.showError(msg) }
 
     private val logging = HttpLoggingInterceptor().apply {
@@ -39,7 +37,7 @@ object NetworkClient {
             .addInterceptor(ResponseInterceptor { errorHandler(it) })
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-//             添加日志拦截器
+            // Add a log blocker，output to Logcat
             .addInterceptor(logging)
             .build()
     }
@@ -48,11 +46,11 @@ object NetworkClient {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())  // 解析 JSON
+            .addConverterFactory(GsonConverterFactory.create())  // Parse JSON
             .build()
     }
 
-    // 提供创建 API Service 的方法
+    // Provides methods for creating API services
     fun <T> createService(serviceClass: Class<T>): T {
         return retrofit.create(serviceClass)
     }

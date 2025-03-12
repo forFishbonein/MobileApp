@@ -14,17 +14,17 @@ object NavBarItems {
     val StudentBarItems = listOf(
         BarItem(
             title = "Home",
-            image = Icons.Filled.Home,         // 可换其他Material图标
+            image = Icons.Filled.Home,
             route = StudentNavRoutes.Home.route
         ),
         BarItem(
             title = "Courses",
-            image = Icons.AutoMirrored.Filled.LibraryBooks,         // 替换为更合适的图标
+            image = Icons.AutoMirrored.Filled.LibraryBooks,
             route = StudentNavRoutes.Courses.route
         ),
         BarItem(
             title = "Profile",
-            image = Icons.Filled.Person,       // 个人页图标
+            image = Icons.Filled.Person,
             route = StudentNavRoutes.Profile.route
         )
     )
@@ -37,7 +37,7 @@ object NavBarItems {
         ),
         BarItem(
             title = "申请",
-            image = Icons.AutoMirrored.Filled.Send, // 替换为更合适的图标
+            image = Icons.AutoMirrored.Filled.Send,
             route = TutorNavRoutes.Application.route
         ),
         BarItem(

@@ -33,18 +33,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun RootNavHost(loadingViewModel: LoadingViewModel = viewModel()) {
     val context = LocalContext.current
-    // 从启动时自动检查并恢复用户登录状态
+    // Automatically checks and restores user login status from startup
     val initialRole = getRoleFromLogin(context)
     var isLoggedIn by remember { mutableStateOf(initialRole != null) }
     var userRole by remember { mutableStateOf(initialRole ?: Role.STUDENT) }
 
     val navController = rememberNavController()
 
-    // 错误弹窗逻辑
+    // Error popup logic
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    // 注册 Snackbar & AlertDialog
+    // Sign up for Snack bar & AlertDialog
     ErrorNotifier.registerSnackbar { message ->
         coroutineScope.launch {
             snackbarHostState.showSnackbar(
@@ -64,11 +64,10 @@ fun RootNavHost(loadingViewModel: LoadingViewModel = viewModel()) {
                 navController = navController,
                 startDestination = if (isLoggedIn) "main" else "auth"
             ) {
-                // 认证流程
                 composable("auth") {
                     AuthMainScreen(
                         onLoginSuccess = { role ->
-                            // 登录成功后更新状态，并跳转到主界面
+                            // After the login is successful, the status is updated and the main page is displayed
                             isLoggedIn = true
                             userRole = role
                             navController.navigate("main") {
@@ -78,13 +77,11 @@ fun RootNavHost(loadingViewModel: LoadingViewModel = viewModel()) {
                         context
                     )
                 }
-                // 主界面
                 composable("main") {
-                    // 根据用户角色加载对应的主界面
+                    // The main page is loaded based on the user role
                     MainScreen(
                         userRole = userRole,
                         onLoginOut = {
-                            // 登录成功后更新状态，并跳转到主界面
                             isLoggedIn = false
                             logoutClear(context)
                             navController.navigate("auth") {
@@ -94,7 +91,7 @@ fun RootNavHost(loadingViewModel: LoadingViewModel = viewModel()) {
                     )
                 }
             }
-            // AlertDialog 处理 //在页面最外层监听并显示对话框
+            // Listen and display a dialog box at the outermost layer of the page
             ErrorDialog(
                 errorMessage = errorMessage,
                 onDismiss = { errorMessage = null }

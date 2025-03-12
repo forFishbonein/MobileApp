@@ -33,39 +33,9 @@ import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
 @SuppressLint("SuspiciousIndentation")
-@OptIn(ExperimentalPagerApi::class) // Accompanist Pager 注解
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun LessonsScreen(courseId: Int?, navController: NavHostController,loadingViewModel: LoadingViewModel = viewModel()) {
-    // TODO 根据courseId去查找对应的 course 内容
-    // 模拟一组 lesson 数据
-//    val lessons = listOf(
-//        Lesson(1, "Lesson 1", "doing", "<h1>Lesson Title</h1>\n" +
-//                "  <p>This lesson covers the basic concepts of the topic. You can include any rich text content here, such as formatted paragraphs, images, or lists.</p>\n" +
-//                "  <p><strong>Key Points:</strong></p>\n" +
-//                "  <ul>\n" +
-//                "    <li>Introduction to the topic</li>\n" +
-//                "    <li>Explanation of core concepts</li>\n" +
-//                "    <li>Examples and exercises</li>\n" +
-//                "  </ul>" + "<h1>Lesson Title</h1>\n" +
-//                "  <p>This lesson covers the basic concepts of the topic. You can include any rich text content here, such as formatted paragraphs, images, or lists.</p>\n" +
-//                "  <p><strong>Key Points:</strong></p>\n" +
-//                "  <ul>\n" +
-//                "    <li>Introduction to the topic</li>\n" +
-//                "    <li>Explanation of core concepts</li>\n" +
-//                "    <li>Examples and exercises</li>\n" +
-//                "  </ul>" + "<h1>Lesson Title</h1>\n" +
-//                "  <p>This lesson covers the basic concepts of the topic. You can include any rich text content here, such as formatted paragraphs, images, or lists.</p>\n" +
-//                "  <p><strong>Key Points:</strong></p>\n" +
-//                "  <ul>\n" +
-//                "    <li>Introduction to the topic</li>\n" +
-//                "    <li>Explanation of core concepts</li>\n" +
-//                "    <li>Examples and exercises</li>\n" +
-//                "  </ul>"
-//        ),
-//        Lesson(2, "Lesson 2", "doing", "This is the second lesson."),
-//        Lesson(3, "Lesson 3", "doing", "This is the third lesson."),
-//    )
-    // 全局加载指示器（overlay）
     if (loadingViewModel.isHttpLoading) {
         Box(
             modifier = Modifier
@@ -77,7 +47,6 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController,loadingViewMo
         }
     }
     var lessons by remember { mutableStateOf(listOf<Lesson>()) }
-    // PagerState 控制当前显示第几页
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
     val apiService = NetworkClient.createService(ApiService::class.java)
@@ -93,98 +62,89 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController,loadingViewMo
             }
         }
     }
-    // 首次进入页面时加载数据
     LaunchedEffect(Unit) {
         getAllLessons()
     }
-//    Box() {
-        Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState()) // 允许滚动
-        ) {
-            // 导航按钮 Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = {
-                        // 点击返回上一课时
-                        if (pagerState.currentPage > 0) {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        }
-                    },
-                    enabled = pagerState.currentPage > 0
-                ) {
-                    Text("Previous Lesson")
-                }
 
-                Button(
-                    onClick = {
-                        if (pagerState.currentPage < lessons.size - 1) {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        }
-                    },
-                    enabled = pagerState.currentPage < lessons.size - 1
-                ) {
-                    Text("Next Lesson")
-                }
-            }
-            // 创建一个横向 Pager
-            HorizontalPager(
-                state = pagerState,
-                count = lessons.size,
-                modifier = Modifier
-                    .fillMaxWidth(),
-//                    .height(575.dp),   // 固定高度，比如 400dp，可根据需要调整
-//                    .padding(horizontal = 16.dp),
-                userScrollEnabled = true // 禁止手势滑动，必须点击按钮
-            ) { pageIndex ->
-                val lesson = lessons[pageIndex]
-                // Card 内容
-                LessonCardTutor(
-                    lesson = lesson,
-                    onChangeComplete = {
-                        // TODO 进行网络请求
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    if (pagerState.currentPage > 0) {
                         coroutineScope.launch {
-                            try {
-                                val response = lesson.lessonId?.let { apiService.completeLesson(it) }
-                                ErrorNotifier.showSuccess("Mark Successful!")
-                                val updated = lessons.toMutableList()
-                                updated[pageIndex] = updated[pageIndex].copy(completed = true)
-                                lessons = updated
-                            } catch (e: Exception) {
-                                ErrorNotifier.showError(e.message ?: "Failed.")
-                            }
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
                         }
-                    },
-                    courseId = courseId,
-                    navController = navController
-                )
+                    }
+                },
+                enabled = pagerState.currentPage > 0
+            ) {
+                Text("Previous Lesson")
             }
-            Box(modifier = Modifier.fillMaxWidth()){
-                // 在 Box 内右下角添加“Add New Course”按钮
-                Button(
-                    onClick = {
-                        /* 添加新课程的逻辑，比如导航到添加课程页面 */
-                        navController.navigate("tutor_add_lesson?courseId=${courseId}&lesson=")
-                    },
-                    shape = RoundedCornerShape(8.dp), // 方形按钮带圆角
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                ) {
-                    Text("Add New Lesson")
-                }
+
+            Button(
+                onClick = {
+                    if (pagerState.currentPage < lessons.size - 1) {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
+                },
+                enabled = pagerState.currentPage < lessons.size - 1
+            ) {
+                Text("Next Lesson")
             }
         }
-
-//    }
+        HorizontalPager(
+            state = pagerState,
+            count = lessons.size,
+            modifier = Modifier
+                .fillMaxWidth(),
+//                    .height(575.dp),   // FIX HEIGHT
+//                    .padding(horizontal = 16.dp),
+            userScrollEnabled = true // gesture swiping is ok
+        ) { pageIndex ->
+            val lesson = lessons[pageIndex]
+            LessonCardTutor(
+                lesson = lesson,
+                onChangeComplete = {
+                    coroutineScope.launch {
+                        try {
+                            val response = lesson.lessonId?.let { apiService.completeLesson(it) }
+                            ErrorNotifier.showSuccess("Mark Successful!")
+                            val updated = lessons.toMutableList()
+                            updated[pageIndex] = updated[pageIndex].copy(completed = true)
+                            lessons = updated
+                        } catch (e: Exception) {
+                            ErrorNotifier.showError(e.message ?: "Failed.")
+                        }
+                    }
+                },
+                courseId = courseId,
+                navController = navController
+            )
+        }
+        Box(modifier = Modifier.fillMaxWidth()){
+            // Add the "Add New Course" button in the bottom right corner of the Box
+            Button(
+                onClick = {
+                    navController.navigate("tutor_add_lesson?courseId=${courseId}&lesson=")
+                },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Text("Add New Lesson")
+            }
+        }
+    }
 }
