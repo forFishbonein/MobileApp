@@ -32,7 +32,7 @@ import java.net.URLEncoder
 fun LessonCardTutor(
     lesson: Lesson,
     modifier: Modifier = Modifier,
-    onChangeComplete: () -> Unit,
+//    onChangeComplete: () -> Unit,
     courseId: Int?,
     navController: NavHostController
 ) {
@@ -146,47 +146,47 @@ fun LessonCardTutor(
                 ) {
                     Text("Update Content")
                 }
-                Button(
-                    onClick = {
-                        showConfirmDialog = true
-                    },
-                    shape = RoundedCornerShape(50),
-                    enabled = !lesson.completed
-                ) {
-                    Text("Mark as Completed")
-                }
+//                Button(
+//                    onClick = {
+//                        showConfirmDialog = true
+//                    },
+//                    shape = RoundedCornerShape(50),
+//                    enabled = !lesson.completed
+//                ) {
+//                    Text("Mark as Completed")
+//                }
             }
-            Text(
-                text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
-            )
+//            Text(
+//                text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
+//                style = MaterialTheme.typography.bodyLarge,
+//                color = MaterialTheme.colorScheme.primary,
+//                modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
+//            )
         }
     }
-    if (showConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
-            title = { Text("Confirmation") },
-            text = { Text("Are you sure you want to update content?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onChangeComplete()
-                        showConfirmDialog = false
-                    }
-                ) {
-                    Text("Yes")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showConfirmDialog = false }
-                ) {
-                    Text("No")
-                }
-            }
-        )
-    }
+//    if (showConfirmDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showConfirmDialog = false },
+//            title = { Text("Confirmation") },
+//            text = { Text("Are you sure you want to update content?") },
+//            confirmButton = {
+//                Button(
+//                    onClick = {
+////                        onChangeComplete()
+//                        showConfirmDialog = false
+//                    }
+//                ) {
+//                    Text("Yes")
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(
+//                    onClick = { showConfirmDialog = false }
+//                ) {
+//                    Text("No")
+//                }
+//            }
+//        )
+//    }
 }
 

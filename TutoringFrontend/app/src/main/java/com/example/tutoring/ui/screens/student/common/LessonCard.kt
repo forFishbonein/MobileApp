@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.tutoring.data.Lesson
+import com.example.tutoring.network.ApiService
+import com.example.tutoring.network.NetworkClient
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.google.gson.Gson
@@ -26,9 +28,13 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun LessonCard(
     lesson: Lesson,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onChangeComplete: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val apiService = NetworkClient.createService(ApiService::class.java)
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
@@ -103,6 +109,20 @@ fun LessonCard(
                     }
                 }
             }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top=16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = {
+                        showConfirmDialog = true
+                    },
+                    shape = RoundedCornerShape(50),
+                    enabled = !lesson.completed
+                ) {
+                    Text("Mark as Completed")
+                }
+            }
             Text(
                 text = "Status: ${if (lesson.completed) "completed" else "in progress"}",
                 style = MaterialTheme.typography.bodyLarge,
@@ -110,6 +130,30 @@ fun LessonCard(
                 modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
             )
         }
+    }
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you have completed this lesson?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onChangeComplete()
+                        showConfirmDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showConfirmDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
 

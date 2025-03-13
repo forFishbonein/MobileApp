@@ -2,6 +2,7 @@ package com.example.tutoring.network
 
 import com.example.tutoring.data.Course
 import com.example.tutoring.data.Lesson
+import com.example.tutoring.data.LessonsProcess
 import com.example.tutoring.data.Registration
 import com.example.tutoring.ui.screens.tutor.CourseRegistration
 import com.example.tutoring.ui.screens.tutor.LessonRequest
@@ -87,6 +88,13 @@ interface ApiService {
         @Path("courseId") courseId: Int?
     ): SpecialResponse<List<Lesson>>
 
+    @GET("/lessonProgress/course/{courseId}/student/{studentId}")
+    suspend fun getLessonProgressByCourseAndStudent(
+        @Path("courseId") courseId: Int?,
+        @Path("studentId") studentId: Int?
+    ): SpecialResponse<List<LessonsProcess>>
+
+
     @POST("/lesson/create")
     suspend fun createLesson(@Body request: Lesson): CommonResponse
 
@@ -98,9 +106,14 @@ interface ApiService {
     @PUT("/lesson/{lessonId}")
     suspend fun updateLesson(@Body request: LessonRequest, @Path("lessonId") lessonId: Int?): CommonResponse
 
-    @PUT("/lesson/{lessonId}/complete")
-    suspend fun completeLesson(
-        @Path("lessonId") lessonId: Int
+//    @PUT("/lesson/{lessonId}/complete")
+//    suspend fun completeLesson(
+//        @Path("lessonId") lessonId: Int
+//    ): CommonResponse
+
+    @POST("/lessonProgress/{lessonId}/{courseId}/completeSelf")
+    suspend fun completeLessonForSelf(
+        @Path("lessonId") lessonId: Int,@Path("courseId") courseId: Int
     ): CommonResponse
 
     @Multipart

@@ -115,19 +115,19 @@ fun LessonsScreen(courseId: Int?, navController: NavHostController,loadingViewMo
             val lesson = lessons[pageIndex]
             LessonCardTutor(
                 lesson = lesson,
-                onChangeComplete = {
-                    coroutineScope.launch {
-                        try {
-                            val response = lesson.lessonId?.let { apiService.completeLesson(it) }
-                            ErrorNotifier.showSuccess("Mark Successful!")
-                            val updated = lessons.toMutableList()
-                            updated[pageIndex] = updated[pageIndex].copy(completed = true)
-                            lessons = updated
-                        } catch (e: Exception) {
-                            ErrorNotifier.showError(e.message ?: "Failed.")
-                        }
-                    }
-                },
+//                onChangeComplete = {
+//                    coroutineScope.launch {
+//                        try {
+//                            val response = lesson.lessonId?.let { apiService.completeLesson(it) }
+//                            ErrorNotifier.showSuccess("Mark Successful!")
+//                            val updated = lessons.toMutableList()
+//                            updated[pageIndex] = updated[pageIndex].copy(completed = true)
+//                            lessons = updated
+//                        } catch (e: Exception) {
+//                            ErrorNotifier.showError(e.message ?: "Failed.")
+//                        }
+//                    }
+//                },
                 courseId = courseId,
                 navController = navController
             )

@@ -125,17 +125,17 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "TutorId: ${course.tutorId}",
+                        text = "StudentName: ${course.studentName}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .padding(start = 16.dp)
                     )
-                    Text(
-                        text = "Student Id: ${course.studentId}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .padding(start = 16.dp)
-                    )
+//                    Text(
+//                        text = "Student Id: ${course.studentId}",
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        modifier = Modifier
+//                            .padding(start = 16.dp)
+//                    )
                 }
             }
             // The return value does not have a TutorName!
