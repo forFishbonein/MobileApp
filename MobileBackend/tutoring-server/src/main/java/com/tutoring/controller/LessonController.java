@@ -103,22 +103,4 @@ public class LessonController {
         List<Lesson> lessons = lessonService.list(queryWrapper);
         return RestResult.success(lessons, "Lessons retrieved successfully.");
     }
-
-    /**
-     * 导师设置这门课已完成·
-     */
-    @PutMapping("/{lessonId}/complete")
-    public RestResult<?> completeLesson(@PathVariable Long lessonId) {
-        Long currentTeacherId = SecurityUtils.getCurrentUserId();
-        if (currentTeacherId == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
-        }
-        if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
-            throw new CustomException(ErrorCode.FORBIDDEN, "Only Teachers can mark lessons as complete.");
-        }
-        // 调用 service 层完成 Lesson 状态更新
-        lessonService.completeLesson(lessonId, currentTeacherId);
-        return RestResult.success(null, "Lesson marked as completed.");
-    }
-
 }

@@ -22,6 +22,9 @@ public class LessonProgress implements Serializable {
     @TableField("lesson_id")
     private Long lessonId;
 
+    @TableField("course_id")
+    private Long courseId;
+
     @TableField("status")
     private ProgressStatus status;
 

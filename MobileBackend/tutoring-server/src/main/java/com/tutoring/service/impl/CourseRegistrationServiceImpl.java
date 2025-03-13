@@ -5,22 +5,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutoring.dao.CourseDao;
 import com.tutoring.dao.CourseRegistrationDao;
 import com.tutoring.dao.LessonProgressDao;
-import com.tutoring.entity.Course;
-import com.tutoring.entity.CourseRegistration;
-import com.tutoring.entity.Lesson;
-import com.tutoring.entity.LessonProgress;
+import com.tutoring.dao.UserDao;
+import com.tutoring.entity.*;
 import com.tutoring.enumeration.ErrorCode;
 import com.tutoring.exception.CustomException;
 import com.tutoring.service.CourseRegistrationService;
 import com.tutoring.service.LessonService;
 import com.tutoring.vo.CourseProgressResponse;
 import com.tutoring.vo.LessonProgressItem;
+import com.tutoring.vo.RegistrationResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -36,6 +35,9 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
     @Autowired
     private CourseDao courseDao; // 用于验证课程归属（审批时需确保当前导师拥有该课程）
 
+    @Autowired
+    private UserDao userDao;
+
     @Override
     public void registerCourse(Long studentId, Long courseId) {
         CourseRegistration registration = CourseRegistration.builder()
@@ -47,26 +49,64 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         log.info("Student {} registered for course {}", studentId, courseId);
     }
 
+    /**
+     * 新方法：返回带学生昵称的注册请求详情
+     */
     @Override
-    public List<CourseRegistration> findRegistrationsByTutor(Long tutorId) {
-        // 查询当前 tutor 所有课程
-        QueryWrapper<Course> courseQuery = new QueryWrapper<>();
-        courseQuery.eq("tutor_id", tutorId);
-        List<Course> tutorCourses = courseDao.selectList(courseQuery);
-        if (tutorCourses == null || tutorCourses.isEmpty()) {
-            return new ArrayList<>();
+    public List<RegistrationResponseDTO> findRegistrationsByTutorWithUserInfo(Long tutorId) {
+        // 1. 查询当前导师名下所有 CourseRegistration 记录
+        List<Course> tutorCourses = getCoursesByTutor(tutorId);
+        if (tutorCourses.isEmpty()) {
+            return Collections.emptyList();
         }
-        List<Long> courseIds = new ArrayList<>();
-        for (Course course : tutorCourses) {
-            courseIds.add(course.getCourseId());
-        }
-        // 查询状态为 pending 的注册请求，且 course_id 属于 tutorCourses
+        List<Long> courseIds = tutorCourses.stream()
+                .map(Course::getCourseId)
+                .collect(Collectors.toList());
 
-        // 改成查出所有状态的注册请求
         QueryWrapper<CourseRegistration> regQuery = new QueryWrapper<>();
         regQuery.in("course_id", courseIds);
-//                .eq("status", CourseRegistration.RegistrationStatus.pending);
-        return this.baseMapper.selectList(regQuery);
+        List<CourseRegistration> registrations = this.baseMapper.selectList(regQuery);
+        if (registrations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 收集 studentId
+        Set<Long> studentIds = registrations.stream()
+                .map(CourseRegistration::getStudentId)
+                .collect(Collectors.toSet());
+
+        // 3. 一次查询对应的用户信息，建立映射
+        if (studentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        QueryWrapper<User> userQuery = new QueryWrapper<>();
+        userQuery.in("user_id", studentIds);
+        List<User> userList = userDao.selectList(userQuery);
+
+        Map<Long, String> userIdToNickname = userList.stream()
+                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+
+        // 4. 拼装 RegistrationResponseDTO
+        return registrations.stream().map(reg -> {
+            return RegistrationResponseDTO.builder()
+                    .registrationId(reg.getRegistrationId())
+                    .courseId(reg.getCourseId())
+                    .studentId(reg.getStudentId())
+                    .studentNickname(userIdToNickname.getOrDefault(reg.getStudentId(), ""))
+                    .status(reg.getStatus())
+                    .createdAt(reg.getCreatedAt())
+                    .updatedAt(reg.getUpdatedAt())
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 可提取一个私有方法，专门根据 tutorId 查出该导师的所有课程
+     */
+    private List<Course> getCoursesByTutor(Long tutorId) {
+        QueryWrapper<Course> courseQuery = new QueryWrapper<>();
+        courseQuery.eq("tutor_id", tutorId);
+        return courseDao.selectList(courseQuery);
     }
 
     @Override

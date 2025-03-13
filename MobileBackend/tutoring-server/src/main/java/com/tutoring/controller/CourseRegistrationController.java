@@ -8,6 +8,7 @@ import com.tutoring.exception.CustomException;
 import com.tutoring.result.RestResult;
 import com.tutoring.service.CourseRegistrationService;
 import com.tutoring.util.SecurityUtils;
+import com.tutoring.vo.RegistrationResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +30,7 @@ public class CourseRegistrationController {
      * 导师查看所有注册请求
      */
     @GetMapping
-    public RestResult<List<CourseRegistration>> listAllRegistrations() {
+    public RestResult<List<RegistrationResponseDTO>> listAllRegistrations() {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated.");
@@ -37,8 +38,10 @@ public class CourseRegistrationController {
         if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
             throw new CustomException(ErrorCode.FORBIDDEN, "Only tutors can view registration requests.");
         }
-        List<CourseRegistration> registrations = courseRegistrationService.findRegistrationsByTutor(currentUserId);
-        return RestResult.success(registrations, "Registrations retrieved successfully.");
+
+        // 调用 Service 获取包含申请者昵称的信息
+        List<RegistrationResponseDTO> responseDTOList = courseRegistrationService.findRegistrationsByTutorWithUserInfo(currentUserId);
+        return RestResult.success(responseDTOList, "Registrations retrieved successfully.");
     }
 
     /**

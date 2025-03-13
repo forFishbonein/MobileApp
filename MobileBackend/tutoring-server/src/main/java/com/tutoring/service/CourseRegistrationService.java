@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.tutoring.entity.Course;
 import com.tutoring.entity.CourseRegistration;
 import com.tutoring.vo.CourseProgressResponse;
+import com.tutoring.vo.RegistrationResponseDTO;
 
 import java.util.List;
 
@@ -16,7 +17,9 @@ public interface CourseRegistrationService extends IService<CourseRegistration> 
     /**
      * 获取当前导师所教授课程的所有注册请求
      */
-    List<CourseRegistration> findRegistrationsByTutor(Long tutorId);
+    // 新方法：返回带昵称的详细信息
+    List<RegistrationResponseDTO> findRegistrationsByTutorWithUserInfo(Long tutorId);
+
 
     /**
      * 导师审批某个注册请求

@@ -14,11 +14,4 @@ public interface LessonService extends IService<Lesson> {
      * @return 创建后的 Lesson 实体
      */
     Lesson createLesson(Long tutorId, CreateLessonRequest request);
-
-    /**
-     * 将指定的 Lesson 标记为已完成
-     * @param lessonId 课程 ID
-     * @param tutorId 导师 ID
-     */
-    void completeLesson(Long lessonId, Long tutorId);
 }
