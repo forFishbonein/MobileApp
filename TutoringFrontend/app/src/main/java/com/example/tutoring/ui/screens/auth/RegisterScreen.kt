@@ -183,7 +183,7 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.wrapContentWidth()
                 .height(56.dp)
-                .padding(top = 4.dp)
+                .padding(top = 6.dp)
             ) {
                 if (isCodeButtonEnabled && isEmailValid(email)) {
                     Text("Get Code")
