@@ -64,7 +64,9 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
                 .collect(Collectors.toList());
 
         QueryWrapper<CourseRegistration> regQuery = new QueryWrapper<>();
-        regQuery.in("course_id", courseIds);
+        regQuery.in("course_id", courseIds)
+                .orderByDesc("created_at");  // 按创建时间降序排列
+
         List<CourseRegistration> registrations = this.baseMapper.selectList(regQuery);
         if (registrations.isEmpty()) {
             return Collections.emptyList();
@@ -166,7 +168,8 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
     @Override
     public List<CourseRegistration> findRegistrationsByStudent(Long studentId) {
         QueryWrapper<CourseRegistration> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("student_id", studentId);
+        queryWrapper.eq("student_id", studentId)
+                .orderByDesc("created_at");  // 按创建时间降序排列
         return this.baseMapper.selectList(queryWrapper);
     }
 }

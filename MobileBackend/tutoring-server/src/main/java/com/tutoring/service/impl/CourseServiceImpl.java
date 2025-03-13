@@ -50,6 +50,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseDao, Course> implements
         if (subject != null && !subject.trim().isEmpty()) {
             queryWrapper.like("subject", subject);
         }
+        // 按创建时间降序排序：创建时间越近的排在前面
+        queryWrapper.orderByDesc("created_at");
         List<Course> courses = this.list(queryWrapper);
         List<CourseListResponse> responses = new ArrayList<>();
         for (Course course : courses) {
@@ -73,7 +75,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseDao, Course> implements
     @Override
     public List<TutorCourseResponse> findCoursesByTutor(Long tutorId) {
         QueryWrapper<Course> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("tutor_id", tutorId);
+        queryWrapper.eq("tutor_id", tutorId)
+                .orderByDesc("created_at"); // 按创建时间降序排序
         List<Course> courses = this.list(queryWrapper);
         List<TutorCourseResponse> responses = new ArrayList<>();
         for (Course course : courses) {

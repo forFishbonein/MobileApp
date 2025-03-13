@@ -7,11 +7,13 @@ import com.tutoring.dao.UserDao;
 import com.tutoring.dto.LoginRequest;
 import com.tutoring.dto.RegisterRequest;
 import com.tutoring.dto.UpdateUserProfileRequest;
+import com.tutoring.entity.TeacherEmail;
 import com.tutoring.entity.User;
 import com.tutoring.enumeration.ErrorCode;
 import com.tutoring.exception.CustomException;
 import com.tutoring.service.MailService;
 import com.tutoring.service.OssService;
+import com.tutoring.service.TeacherEmailService;
 import com.tutoring.service.UserService;
 import com.tutoring.util.JwtUtils;
 import com.tutoring.vo.LoginResponse;
@@ -23,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static net.sf.jsqlparser.util.validation.metadata.NamedObject.role;
 
 @Slf4j
 @Service
@@ -39,6 +43,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     @Autowired
     private OssService ossService;
+
+    @Autowired
+    private TeacherEmailService teacherEmailService;
 
     /**
      * 内存Map：只保存【email -> 验证码】, 不需要存储密码/角色等。
@@ -94,6 +101,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         // 3. 验证角色
         if (!("student".equalsIgnoreCase(request.getRole()) || "tutor".equalsIgnoreCase(request.getRole()))) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid role, must be 'student' or 'tutor'.");
+        }
+
+        // 3.5 如果角色是 tutor，则验证该邮箱是否在教师邮箱表中存在
+        if ("tutor".equalsIgnoreCase(request.getRole())) {
+            TeacherEmail teacherEmail = teacherEmailService.getById(email);
+            if (teacherEmail == null) {
+                throw new CustomException(ErrorCode.BAD_REQUEST, "This email is not authorized for tutor registration.");
+            }
         }
 
         // 4. 正式注册：插入数据库
