@@ -13,21 +13,21 @@ import com.example.tutoring.ui.navigation.common.NavBarItems
 fun StudentBottomBar(
     navController: NavHostController
 ) {
-    // 获取当前路由信息，以判断选中项
+    // Gets the current route information to determine the selected item
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface, // 可自行调配颜色
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = Color.White
     ) {
         NavBarItems.StudentBarItems.forEach { navItem ->
             NavigationBarItem(
-                selected = currentRoute == navItem.route,
+                selected = currentRoute?.startsWith(navItem.route) == true,
                 onClick = {
-                    // 点击时导航到对应路由
+                    // Click to navigate to the corresponding route
                     navController.navigate(navItem.route) {
-                        // 跳转配置
+                        // Skip configuration
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

@@ -16,7 +16,7 @@ import com.example.tutoring.data.Role
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthMainScreen(onLoginSuccess: (Role) -> Unit,context: Context) {
-    // 内层自己维护的 NavController，仅负责 登录/注册 之间的切换
+    // The NavController is only responsible for switching between login/registration
     val authNavController = rememberNavController()
     Scaffold(
         topBar = {
@@ -31,8 +31,5 @@ fun AuthMainScreen(onLoginSuccess: (Role) -> Unit,context: Context) {
         ) {
             AuthNavHost(authNavController, onLoginSuccess, context)
         }
-//        Column(Modifier.padding(paddingValues)) {
-//
-//        }
     }
 }

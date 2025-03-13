@@ -41,7 +41,6 @@ fun LoginScreen(
     context: Context
 ) {
     val scope = rememberCoroutineScope()
-    // 账号、密码的本地状态
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val apiService = NetworkClient.createService(ApiService::class.java)
@@ -81,34 +80,36 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                scope.launch {
-                    try {
-                        // 构造请求体
-                        val requestBody = mapOf(
-                            "email" to email,
-                            "password" to password,
-                        )
-                        // 调用接口
-                        val response = apiService.login(requestBody)
-                        val role = Role.valueOf(response.data?.role?.uppercase())
-                        val token = response.data.token
-                        // 调用接口
-                        val response2 = apiService.getMyProfile(token)
+                if (email.isBlank() || password.isBlank()) {
+                    ErrorNotifier.showError("Please fill all fields")
+                } else {
+                    scope.launch {
+                        try {
+                            val requestBody = mapOf(
+                                "email" to email,
+                                "password" to password,
+                            )
+                            val response = apiService.login(requestBody)
 
-                        // 存储用户数据等后续操作
-//                        val info = mutableMapOf<String, Any>().apply {
-//                            put("name", email.ifBlank { "张三" })
-//                            put("age", 20)
-//                        }
-                        val info = response2.data
-                        if (info != null) {
-                            saveUserData(context, role.name, token, info)
-                            onLoginSuccess(role)
-                        }else{
+                            @Suppress("UNCHECKED_CAST")
+                            val role = Role.valueOf((response.data as Map<String, Any>)["role"].toString().uppercase())
+
+                            @Suppress("UNCHECKED_CAST")
+                            val token = (response.data as Map<String, Any>)["token"].toString()
+
+                            val response2 = apiService.getMyProfile("Bearer $token")
+
+                            val info = response2.data
+                            if (info != null) {
+                                saveUserData(context, role.name, token, info)
+                                onLoginSuccess(role)
+                                ErrorNotifier.showSuccess( "Login successful!")
+                            }else{
+                                ErrorNotifier.showError( "Login failed.")
+                            }
+                        } catch (e: Exception) {
                             ErrorNotifier.showError(e.message ?: "Login failed.")
                         }
-                    } catch (e: Exception) {
-                        ErrorNotifier.showError(e.message ?: "Login failed.")
                     }
                 }
             },
@@ -130,9 +131,9 @@ fun LoginScreen(
 fun saveUserData(context: Context, role: String, token: String, userInfo: Any) {
     val sharedPrefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     val gson = Gson()
-    val userInfoJson = gson.toJson(userInfo)  // 将对象转换为 JSON 字符串
+    val userInfoJson = gson.toJson(userInfo)
     with(sharedPrefs.edit()) {
-        putString("user_role", role) // role.name 得到 "STUDENT" 或 "TUTOR"
+        putString("user_role", role) // "STUDENT" or "TUTOR"
         putString("token", token)
         putString("user_info", userInfoJson)
         apply()

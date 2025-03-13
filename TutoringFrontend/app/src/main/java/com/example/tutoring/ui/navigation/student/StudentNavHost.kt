@@ -25,7 +25,6 @@ fun StudentNavHost(navController: NavHostController,onLoginOut: () -> Unit,) {
             arguments = listOf(navArgument("courseId") { type = NavType.IntType })
         ) { backStackEntry ->
             val courseId = backStackEntry.arguments?.getInt("courseId")
-            // 调用 LessonsScreen(courseId)
             LessonsScreen(courseId)
         }
 

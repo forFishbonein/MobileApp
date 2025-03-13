@@ -1,7 +1,11 @@
 package com.example.tutoring.network
 
+import com.example.tutoring.data.Course
+import com.example.tutoring.data.Lesson
+import com.example.tutoring.data.Registration
+import com.example.tutoring.ui.screens.tutor.CourseRegistration
+import com.example.tutoring.ui.screens.tutor.LessonRequest
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -12,15 +16,19 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-//data class LoginRequest(val username: String, val password: String)
-//data class CommonResponse<T>(val code: Int, val message: String, val data: T)
-// 定义一个通用响应结构，不需要为 data 部分单独建类
+// Define a common response structure
 data class CommonResponse(
     val code: Int,
     val message: String,
-//    val data: Map<String, Any>?
+// val data: Map<String, Any>?
     val data: Any?
 )
+data class SpecialResponse<T>(
+    val code: Int,
+    val message: String,
+    val data: T?
+)
+
 
 interface ApiService {
     @POST("/user/send-code")
@@ -34,10 +42,9 @@ interface ApiService {
 
     @GET("/user/me")
     suspend fun getMyProfile(@Header("Authorization") token: String): CommonResponse
-//    val token = "your_token_here" // 如 "Bearer xxx"
-//    val response = apiService.getMyProfile("Bearer $token")
+
     @PUT("/user/me")
-    suspend fun updateMyProfile(@Body request: Map<String, Any>): CommonResponse
+    suspend fun updateMyProfile(@Body request: Map<String, String>): CommonResponse
 
     @Multipart
     @POST("/user/me/avatar")
@@ -45,52 +52,68 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): CommonResponse
 
-
-
     @GET("/course/list")
     suspend fun listCourses(
         @Query("name") name: String?,
         @Query("subject") subject: String?
-    ): CommonResponse
-    // val response = apiService.listCourses(name = "Java", subject = "Backend")
+    ): SpecialResponse<List<Course>>
+
+    @POST("/course/create")
+    suspend fun createCourse(@Body request: Map<String, String>): CommonResponse
+
+    @GET("/course/{courseId}")
+    suspend fun getCourseDetail(
+        @Path("courseId") courseId: Int
+    ): SpecialResponse<Course>
+
+    @GET("/course/tutor/list")
+    suspend fun listTutorCourses(): SpecialResponse<List<CourseRegistration>>
+
+    @GET("/course/registrations/student")
+    suspend fun listStudentRegistrations(): SpecialResponse<List<Registration>>
+
+    //这个是查的老师的
+    @GET("/course/registrations")
+    suspend fun listAllRegistrations(): SpecialResponse<List<Registration>>
 
     @POST("/course/register")
-    suspend fun registerCourse(@Body request: Map<String, Any>): CommonResponse
+    suspend fun registerCourse(@Body request: Map<String, Int>): CommonResponse
+
+    @PUT("/course/registrations/{registrationId}")
+    suspend fun updateRegistration(@Body request: Map<String, String>, @Path("registrationId") registrationId: Int?): CommonResponse
 
     @GET("/lesson/course/{courseId}")
     suspend fun listLessons(
-        @Path("courseId") courseId: Long
-    ): CommonResponse
+        @Path("courseId") courseId: Int?
+    ): SpecialResponse<List<Lesson>>
 
     @POST("/lesson/create")
-    suspend fun createLesson(@Body request: Map<String, Any>): CommonResponse
+    suspend fun createLesson(@Body request: Lesson): CommonResponse
 
     @GET("/lesson/{lessonId}")
-    suspend fun getLesson(
+    suspend fun getLessonDetail(
         @Path("lessonId") lessonId: Long
     ): CommonResponse
 
     @PUT("/lesson/{lessonId}")
-    suspend fun updateLesson(@Body request: Map<String, Any>): CommonResponse
+    suspend fun updateLesson(@Body request: LessonRequest, @Path("lessonId") lessonId: Int?): CommonResponse
 
-    @POST("/lessonProgress/{lessonId}/complete")
+    @PUT("/lesson/{lessonId}/complete")
     suspend fun completeLesson(
         @Path("lessonId") lessonId: Int
     ): CommonResponse
 
-
     @Multipart
-    @POST("/oss/uploadImage") // 根据后端实际接口地址修改
+    @POST("/oss/uploadImage")
     suspend fun uploadImage(
         @Part file: MultipartBody.Part
     ): CommonResponse
 
     @Multipart
-    @POST("/oss/uploadPdf") // 根据后端实际接口地址修改
+    @POST("/oss/uploadPdf")
     suspend fun uploadPdf(
         @Part file: MultipartBody.Part
     ): CommonResponse
-
 
     //data science
     @GET("/course/{courseId}/progress")

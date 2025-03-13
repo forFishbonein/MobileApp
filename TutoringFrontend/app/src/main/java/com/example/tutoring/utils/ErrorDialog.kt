@@ -15,10 +15,10 @@ fun ErrorDialog(
             onDismissRequest = { onDismiss() },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("确定")
+                    Text("Confirm")
                 }
             },
-            title = { Text("错误提示") },
+            title = { Text("Error") },
             text = { Text(errorMessage) }
         )
     }

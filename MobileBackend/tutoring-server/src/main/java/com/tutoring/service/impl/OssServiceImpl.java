@@ -22,6 +22,7 @@ public class OssServiceImpl implements OssService {
     @Value("${ali-oss.endpoint}")
     private String endpoint;
 
+//    @Value("${ali-oss.access-key-id}")
     @Value("${ali-oss.access-key-id}")
     private String accessKeyId;
 
@@ -52,7 +53,6 @@ public class OssServiceImpl implements OssService {
             // 5. 拼装文件URL（公共读桶情况下）
             String fileUrl = "https://" + bucketName + "." + endpoint + "/" + objectName;
             return fileUrl;
-
         } catch (IOException e) {
             log.error("上传到OSS失败: {}", e.getMessage(), e);
             // 根据你的错误码体系抛出异常

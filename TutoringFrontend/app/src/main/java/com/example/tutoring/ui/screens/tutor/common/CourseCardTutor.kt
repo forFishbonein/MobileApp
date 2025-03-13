@@ -5,15 +5,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,19 +28,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.tutoring.data.Course
+import com.example.tutoring.ui.screens.tutor.CourseRegistration
 
 // 课程卡片
 @Composable
-fun CourseCardTutor(cardType:String="application", course: Course, navController: NavHostController? = null) {
-    // 新增展开状态
+fun CourseCardTutor(cardType:String="application", course: CourseRegistration, onConfirmClick: (confirm:String) -> Unit, navController: NavHostController? = null) {
     var expanded by remember { mutableStateOf(false) }
+    var showAcceptDialog by remember { mutableStateOf(false) }
+    var showRejectDialog by remember { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // 阴影从8dp改为2dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f) // 调低不透明度，让边框更柔和
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -58,7 +63,7 @@ fun CourseCardTutor(cardType:String="application", course: Course, navController
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "Subject: ${course.subjectName}",
+                    text = "Subject: ${course.subject}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 if (course.status.isNotBlank() && cardType=="application") {
@@ -73,12 +78,10 @@ fun CourseCardTutor(cardType:String="application", course: Course, navController
                     style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.Underline),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.align(Alignment.Start).clickable {
-                        // 处理点击事件
                         expanded = !expanded
                     }
                 )
             }
-            // 将按钮和状态标签放在同一个 Row
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -86,27 +89,26 @@ fun CourseCardTutor(cardType:String="application", course: Course, navController
                 if(cardType=="application"){
                     Button(
                         onClick = {
-                            // 触发加入课程逻辑
+                            showAcceptDialog = true
                         },
                         shape = RoundedCornerShape(50),
-                        enabled = course.status == "Pending",
+                        enabled = course.status == "pending",
                     ) {
                         Text("Accept")
                     }
                     Button(
                         onClick = {
-                            // 触发加入课程逻辑
+                            showRejectDialog = true
                         },
                         shape = RoundedCornerShape(50),
-                        enabled = course.status == "Pending",
+                        enabled = course.status == "pending",
                     ) {
                         Text("Reject")
                     }
                 }else{
                     Button(
                         onClick = {
-                            // 跳转到 lessons
-                            navController?.navigate("tutor_lessons/${course.id}")
+                            navController?.navigate("tutor_lessons/${course.courseId}")
                         },
                         shape = RoundedCornerShape(50),
                     ) {
@@ -115,16 +117,98 @@ fun CourseCardTutor(cardType:String="application", course: Course, navController
                 }
             }
         }
-        // 添加展开更多信息按钮
 
-        // 展开区域
         if (expanded) {
-            // 这里展示更多信息，可根据需要修改
+            if(cardType=="application"){
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TutorId: ${course.tutorId}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                    )
+                    Text(
+                        text = "Student Id: ${course.studentId}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                    )
+                }
+            }
+            // The return value does not have a TutorName!
+//            else{
+//                Text(
+//                    text = "TutorName: ${if (course.tutorName.isBlank()) "Not available" else course.tutorName}",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier
+//                        .padding(start = 16.dp)
+//                )
+//            }
+
             Text(
-                text = "Detailed course information goes here...",
+                text = "Description: ${course.description}",
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+                modifier = Modifier
+                    .padding(start = 16.dp)
             )
+            Text(
+                text = "Create Time: ${course.createdAt.orEmpty().ifBlank { "Not available" }}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
         }
+    }
+
+    //Approve Dialog
+    if (showAcceptDialog) {
+        AlertDialog(
+            onDismissRequest = { showAcceptDialog = false },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you want to accept this course request?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirmClick("approved")
+                        showAcceptDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAcceptDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
+    //Reject Dialog
+    if (showRejectDialog) {
+        AlertDialog(
+            onDismissRequest = { showRejectDialog = false },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you want to reject this course request?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirmClick("rejected")
+                        showRejectDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRejectDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }

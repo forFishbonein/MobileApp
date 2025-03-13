@@ -11,7 +11,7 @@ import com.example.tutoring.ui.main.RootNavHost
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        NetworkClient.initialize(applicationContext) // 初始化 NetworkClient
+        NetworkClient.initialize(applicationContext) // Initialize NetworkClient
         enableEdgeToEdge()
         setContent {
             TutoringTheme {

@@ -12,20 +12,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,11 +55,10 @@ fun RegisterScreen(
     var codeCountdown by remember { mutableStateOf(0) }
     val isCodeButtonEnabled = codeCountdown == 0
 
-    // 控制密码是否可见的状态变量
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    // 在外部定义一个状态，用于保存用户选择的身份（也可以使用 ViewModel 等）
-    var userType by remember { mutableStateOf(Role.STUDENT) } // 默认选中 "Student"
+
+    var userType by remember { mutableStateOf(Role.STUDENT) }
     val apiService = NetworkClient.createService(ApiService::class.java)
     Column(
         modifier = Modifier
@@ -82,17 +76,14 @@ fun RegisterScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Student 单选按钮
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
-                    // 如果 userType 等于 Role.STUDENT，则该按钮被选中
                     selected = (userType == Role.STUDENT),
-                    onClick = { userType = Role.STUDENT } // 点击时将 userType 设置为 Role.STUDENT
+                    onClick = { userType = Role.STUDENT }
                 )
                 Text("Student", modifier = Modifier.padding(start = 2.dp))
             }
 
-            // Tutor 单选按钮
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = (userType == Role.TUTOR),
@@ -163,7 +154,7 @@ fun RegisterScreen(
                 onValueChange = { verificationCode = it },
                 label = { Text("Verification Code") },
                 singleLine = true,
-                modifier = Modifier.weight(1f) // 分配剩余空间
+                modifier = Modifier.weight(1f) // Allocate surplus space
             )
 
             Button(
@@ -179,9 +170,7 @@ fun RegisterScreen(
                         coroutineScope.launch {
                             try {
                                 // Call backend API to send verification code to the provided email.
-                                // 构造请求体
                                 val requestBody = mapOf("email" to email)
-                                // 调用接口
                                 val response = apiService.sendCode(requestBody)
                                 ErrorNotifier.showSuccess("Send successful! Please check your email.")
                             } catch (e: Exception) {
@@ -191,7 +180,7 @@ fun RegisterScreen(
                     }
                 },
                 enabled = isCodeButtonEnabled && isEmailValid(email),
-                shape = RoundedCornerShape(8.dp), // 方形按钮带圆角
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.wrapContentWidth()
                 .height(56.dp)
                 .padding(top = 4.dp)
@@ -219,17 +208,14 @@ fun RegisterScreen(
                     coroutineScope.launch {
                         try {
                             // Call backend API to send verification code to the provided email.
-                            // 构造请求体
                             val requestBody = mapOf(
-                                "code" to verificationCode,       // 验证码
+                                "code" to verificationCode,
                                 "email" to email,
                                 "password" to password,
                                 "role" to userType.name.lowercase()
                             )
-                            // 调用接口
                             val response = apiService.register(requestBody)
                             ErrorNotifier.showSuccess("Register successful!")
-                            // 跳转到登录页面
                             onNavigateToLogin()
                         } catch (e: Exception) {
                             ErrorNotifier.showError(e.message ?: "Register failed.")
@@ -253,7 +239,7 @@ fun RegisterScreen(
     }
 
 }
-// 邮箱格式校验函数
+// Mailbox format verification function
 fun isEmailValid(email: String): Boolean {
     return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
