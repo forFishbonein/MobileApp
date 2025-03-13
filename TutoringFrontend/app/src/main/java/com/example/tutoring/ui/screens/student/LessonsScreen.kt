@@ -73,6 +73,15 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text("Completion of lessons: ${lessons.count { it.completed }} / ${lessons.size}")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Button(
                 onClick = {
                     if (pagerState.currentPage > 0) {
