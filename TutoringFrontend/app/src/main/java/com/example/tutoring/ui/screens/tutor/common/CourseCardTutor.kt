@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,22 +21,38 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.tutoring.data.Course
+import com.example.tutoring.network.ApiService
+import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.ui.screens.tutor.CourseRegistration
+import com.example.tutoring.utils.ErrorNotifier
+import kotlinx.coroutines.launch
 
 // 课程卡片
 @Composable
-fun CourseCardTutor(cardType:String="application", course: CourseRegistration, onConfirmClick: (confirm:String) -> Unit, navController: NavHostController? = null) {
+fun CourseCardTutor(cardType:String="application",
+                    course: CourseRegistration,
+                    onConfirmClick: (confirm:String) -> Unit,
+                    navController: NavHostController? = null,
+                    onDelete: () -> Unit,
+                    onUpdate: (course: CourseRegistration) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     var showAcceptDialog by remember { mutableStateOf(false) }
     var showRejectDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val apiService = NetworkClient.createService(ApiService::class.java)
     Card(
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -160,6 +177,36 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
                 modifier = Modifier
                     .padding(start = 16.dp)
             )
+            if(cardType=="courses"){
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = {
+                            onUpdate(course)
+                            expanded = false
+                        },
+                        shape = RoundedCornerShape(8),
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                    ) {
+                        Text("Update")
+                    }
+                    Button(
+                        onClick = {
+                            showDeleteDialog = true
+                        },
+                        shape = RoundedCornerShape(8),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier
+                        .padding(end = 16.dp)
+                    ) {
+                        Text("Delete")
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
@@ -206,6 +253,30 @@ fun CourseCardTutor(cardType:String="application", course: CourseRegistration, o
             },
             dismissButton = {
                 TextButton(onClick = { showRejectDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
+    //Approve Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you want to delete this course?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("No")
                 }
             }

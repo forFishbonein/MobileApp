@@ -108,7 +108,7 @@ fun LoginScreen(
                                 ErrorNotifier.showError( "Login failed.")
                             }
                         } catch (e: Exception) {
-                            ErrorNotifier.showError(e.message ?: "Login failed.")
+//                            ErrorNotifier.showError(e.message ?: "Login failed.")
                         }
                     }
                 }

@@ -8,6 +8,7 @@ import com.example.tutoring.ui.screens.tutor.CourseRegistration
 import com.example.tutoring.ui.screens.tutor.LessonRequest
 import okhttp3.MultipartBody
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -61,6 +62,12 @@ interface ApiService {
 
     @POST("/course/create")
     suspend fun createCourse(@Body request: Map<String, String>): CommonResponse
+
+    @PUT("/course/{courseId}")
+    suspend fun updateCourse(@Body request: Map<String, String>, @Path("courseId") courseId: Int?): CommonResponse
+
+    @DELETE("/course/{courseId}")
+    suspend fun deleteCourse(@Path("courseId") courseId: Int?): CommonResponse
 
     @GET("/course/{courseId}")
     suspend fun getCourseDetail(

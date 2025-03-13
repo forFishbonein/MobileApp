@@ -197,7 +197,9 @@ fun ApplicationScreen(navController: NavHostController, loadingViewModel: Loadin
                         updated[index] = updated[index].copy(status = "Pending")
                         courses = updated
                     },
-                    navController
+                    navController,
+                    onDelete = {},
+                    onUpdate = {}
                 )
             }
 

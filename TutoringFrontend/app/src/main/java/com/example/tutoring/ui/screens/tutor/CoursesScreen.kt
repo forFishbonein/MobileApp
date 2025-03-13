@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -109,16 +110,21 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
             }
     }
     var showAddDialog by remember { mutableStateOf(false) }
+    var handleType by remember { mutableStateOf("") }
     var courseName by remember { mutableStateOf("") }
     var courseDescription by remember { mutableStateOf("") }
     var courseSubject by remember { mutableStateOf("") }
+    var wannaUpdateCourseId by remember { mutableIntStateOf(0) }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Button(
-            onClick = { showAddDialog = true },
+            onClick = {
+                showAddDialog = true
+                handleType = "add"
+           },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Add Course")
@@ -127,7 +133,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
-                title = { Text("Add Course") },
+                title = { Text(text = if (handleType == "add") "Add Course" else "Update Course") },
                 text = {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -162,8 +168,14 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                                     "subject" to courseSubject
                                 )
                                 try {
-                                    val response = apiService.createCourse(requestBody)
-                                    ErrorNotifier.showSuccess("Add course successful!")
+                                    if(handleType=="add"){
+                                        val response = apiService.createCourse(requestBody)
+                                        ErrorNotifier.showSuccess("Add course successful!")
+                                    }else if(handleType=="update"){
+                                        val response = apiService.updateCourse(requestBody, wannaUpdateCourseId)
+                                        ErrorNotifier.showSuccess("Add course successful!")
+                                    }
+
                                     showAddDialog = false
                                     // clear form
                                     courseName = ""
@@ -172,7 +184,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                                     // Refresh the course list if needed
                                     getAllCourses()
                                 } catch (e: Exception) {
-                                    ErrorNotifier.showError(e.message ?: "Add course failed")
+                                    ErrorNotifier.showError(e.message ?: "Failed")
                                 }
                             }
                         }
@@ -201,7 +213,26 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                     cardType = "courses",
                     course = course,
                     onConfirmClick = {},
-                    navController = navController
+                    navController = navController,
+                    onDelete = {
+                        scope.launch {
+                            try {
+                                val response = apiService.deleteCourse(course.courseId)
+                                ErrorNotifier.showSuccess("Delete successful!")
+                                getAllCourses()
+                            } catch (e: Exception) {
+                                ErrorNotifier.showError(e.message ?: "Failed")
+                            }
+                        }
+                    },
+                    onUpdate = { course ->
+                        showAddDialog = true
+                        handleType = "update"
+                        wannaUpdateCourseId = course.courseId
+                        courseName = course.courseName
+                        courseDescription = course.description
+                        courseSubject = course.subject
+                    }
                 )
             }
 
