@@ -17,54 +17,44 @@ import java.util.Date;
 @Data
 public class JwtUtils {
 
+
     @Value("${jwt.secret:defaultSecretKey}")
     private String secretKey;
 
-    // 默认1天(毫秒)
     @Value("${jwt.expiration:86400000}")
     private long expiration;
 
-    /**
-     * 生成 JWT Token
-     *  - subject 存放 userId
-     *  - role 存放 user.getRole().name()
-     *  - email
-     */
     public String generateToken(User user) {
-        Date now = new Date();
-        Date exp = new Date(now.getTime() + expiration);
-
-        return Jwts.builder()
-                .setSubject(String.valueOf(user.getUserId()))
-                .claim("role", user.getRole().name())
-                .claim("email", user.getEmail())
-                .setIssuedAt(now)
-                .setExpiration(exp)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
-                .compact();
+        return buildToken(user.getUserId(), user.getRole().name(), expiration, "auth");
     }
 
-    /**
-     * 检查 Token 是否有效（签名是否正确 & 是否过期）
-     */
+    /** 新增：短期 Reset Token */
+    public String generateResetToken(User user, long ttlMillis) {
+        return buildToken(user.getUserId(), null, ttlMillis, "reset");
+    }
+
+    private String buildToken(Long subjectId, String role, long ttl, String purpose) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + ttl);
+        JwtBuilder b = Jwts.builder()
+                .setSubject(String.valueOf(subjectId))
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .claim("purpose", purpose);
+        if (role != null) b.claim("role", role);
+        return b.signWith(SignatureAlgorithm.HS256, secretKey).compact();
+    }
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;
         }
     }
 
-    /**
-     * 获取 Claims
-     */
     public Claims getClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
     }
 }

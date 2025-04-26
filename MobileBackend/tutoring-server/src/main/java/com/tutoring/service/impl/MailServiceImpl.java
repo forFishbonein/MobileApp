@@ -53,14 +53,23 @@ public class MailServiceImpl implements MailService {
     }
 
 
+
     @Async("mailAsyncExecutor")
     @Override
-    public void sendResetLink(String toEmail, String resetLink) {
-        String subject = "Fitness App - Password Reset Link";
-        String text = "Hello,\n\nPlease click the following link to reset your password:\n" +
-                resetLink + "\n\nThe link is valid for 5 minutes.\n" +
-                "If you did not request a password reset, please ignore this email.";
-        sendMail(toEmail, subject, text);
+    public void sendResetLink(String toEmail, String subject, String text) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setFrom("no-reply@yourapp.com");  // 确保与 spring.mail.username 对应
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(text, false);
+            mailSender.send(message);
+            log.info("Email sent: to={} subject={}", toEmail, subject);
+        } catch (MessagingException e) {
+            log.error("Failed to send email to {} subject={}, error={}",
+                    toEmail, subject, e.getMessage());
+        }
     }
 
     @Async("mailAsyncExecutor")

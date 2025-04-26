@@ -3,6 +3,7 @@ package com.tutoring.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tutoring.dto.LoginRequest;
 import com.tutoring.dto.RegisterRequest;
+import com.tutoring.dto.ResetPasswordJwtRequest;
 import com.tutoring.dto.UpdateUserProfileRequest;
 import com.tutoring.entity.User;
 import com.tutoring.vo.LoginResponse;
@@ -40,4 +41,14 @@ public interface UserService extends IService<User> {
      * （若要立即更新数据库里用户的 avatarUrl，也可在这里一起处理）
      */
     String uploadAvatar(Long userId, MultipartFile file);
+
+    /**
+     * 发送重置密码的短期 JWT 令牌到邮箱（有效期 5 分钟）
+     */
+    void sendResetToken(String email);
+
+    /**
+     * 使用 JWT 令牌重置密码
+     */
+    void resetPasswordWithToken(ResetPasswordJwtRequest req);
 }

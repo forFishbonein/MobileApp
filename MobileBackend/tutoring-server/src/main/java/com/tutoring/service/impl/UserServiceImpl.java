@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutoring.dao.UserDao;
 import com.tutoring.dto.LoginRequest;
 import com.tutoring.dto.RegisterRequest;
+import com.tutoring.dto.ResetPasswordJwtRequest;
 import com.tutoring.dto.UpdateUserProfileRequest;
 import com.tutoring.entity.TeacherEmail;
 import com.tutoring.entity.User;
@@ -17,10 +18,12 @@ import com.tutoring.service.TeacherEmailService;
 import com.tutoring.service.UserService;
 import com.tutoring.util.JwtUtils;
 import com.tutoring.vo.LoginResponse;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -51,6 +54,66 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
      * 内存Map：只保存【email -> 验证码】, 不需要存储密码/角色等。
      */
     private final Map<String, String> emailCodeMap = new ConcurrentHashMap<>();
+
+
+    // 5 分钟 = 5 * 60 * 1000ms
+    private static final long RESET_JWT_TTL = 5 * 60 * 1000;
+
+    @Override
+    @Transactional
+    public void sendResetToken(String email) {
+        // 查出用户且只能 Active 状态才能重置
+        User user = this.lambdaQuery()
+                .select(User::getUserId, User::getEmail, User::getAccountStatus)
+                .eq(User::getEmail, email)
+                .one();
+        if (user == null || user.getAccountStatus() != User.AccountStatus.Active) {
+            // 不暴露用户是否存在，直接返回成功即可
+            return;
+        }
+
+        // 生成一个短期 JWT
+        String jwt = jwtUtils.generateResetToken(user, RESET_JWT_TTL);
+
+        // 发送邮件，邮件里只放令牌，告知用户复制到 App
+        String subject = "Your Password Reset Token";
+        String text = String.format(
+                "You requested to reset your password. Please copy the following token into the app within 5 minutes:\n\n%s",
+                jwt
+        );
+        mailService.sendResetLink(email, subject, text);
+
+        log.info("Sent password reset token to {} (ttl={}ms)", email, RESET_JWT_TTL);
+    }
+
+    @Override
+    @Transactional
+    public void resetPasswordWithToken(ResetPasswordJwtRequest req) {
+        String token = req.getToken();
+        // 验证签名和过期
+        if (!jwtUtils.validateToken(token)) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid or expired reset token.");
+        }
+        Claims claims = jwtUtils.getClaims(token);
+        // 校验用途
+        String purpose = claims.get("purpose", String.class);
+        if (!"reset".equals(purpose)) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid reset token.");
+        }
+        Long userId = Long.parseLong(claims.getSubject());
+
+        // 查用户并检查状态
+        User user = this.getById(userId);
+        if (user == null || user.getAccountStatus() != User.AccountStatus.Active) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "User not found or not eligible for reset.");
+        }
+
+        // 更新密码
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
+        this.updateById(user);
+
+        log.info("Password reset for userId={}", userId);
+    }
 
     /**
      * 第一步：发送验证码

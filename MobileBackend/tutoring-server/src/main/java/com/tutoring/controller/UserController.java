@@ -1,9 +1,6 @@
 package com.tutoring.controller;
 
-import com.tutoring.dto.LoginRequest;
-import com.tutoring.dto.RegisterRequest;
-import com.tutoring.dto.SendCodeRequest;
-import com.tutoring.dto.UpdateUserProfileRequest;
+import com.tutoring.dto.*;
 import com.tutoring.entity.User;
 import com.tutoring.enumeration.ErrorCode;
 import com.tutoring.exception.CustomException;
@@ -120,6 +117,25 @@ public class UserController {
         // 调用 Service 上传并更新数据库
         String avatarUrl = userService.uploadAvatar(currentUserId, file);
         return RestResult.success(avatarUrl, "Avatar uploaded successfully.");
+    }
+
+
+    /**
+     * 第一步：忘记密码，发送短期 Reset JWT 到邮箱
+     */
+    @PostMapping("/forgot-password")
+    public RestResult<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        userService.sendResetToken(req.getEmail());
+        return RestResult.success(null, "Reset token has been sent to your email.");
+    }
+
+    /**
+     * 第二步：在 App 内输入 Reset JWT + 新密码 来重置
+     */
+    @PostMapping("/reset-password")
+    public RestResult<?> resetPassword(@Valid @RequestBody ResetPasswordJwtRequest req) {
+        userService.resetPasswordWithToken(req);
+        return RestResult.success(null, "Password has been reset successfully.");
     }
 }
 
