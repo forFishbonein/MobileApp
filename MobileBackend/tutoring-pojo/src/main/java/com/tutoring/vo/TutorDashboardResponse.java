@@ -5,6 +5,7 @@ import java.util.List;
 
 @Data
 public class TutorDashboardResponse {
+    //
     /**
      * 当前导师所教授的所有课程仪表盘数据列表
      */
