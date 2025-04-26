@@ -31,22 +31,22 @@ object NavBarItems {
 
     val TutorBarItems = listOf(
         BarItem(
-            title = "主页",
+            title = "Home",
             image = Icons.Filled.Home,
             route = TutorNavRoutes.Home.route
         ),
         BarItem(
-            title = "申请",
+            title = "Application",
             image = Icons.AutoMirrored.Filled.Send,
             route = TutorNavRoutes.Application.route
         ),
         BarItem(
-            title = "课程",
+            title = "Courses",
             image = Icons.Filled.Book,
             route = TutorNavRoutes.Courses.route
         ),
         BarItem(
-            title = "我的",
+            title = "Profile",
             image = Icons.Filled.Person,
             route = TutorNavRoutes.Profile.route
         ),

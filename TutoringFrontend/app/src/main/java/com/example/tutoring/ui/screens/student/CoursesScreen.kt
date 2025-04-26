@@ -112,8 +112,8 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                         description = detail.description,
                         subject = detail.subject,
                         status = registration.status,
-                        updatedAt = detail.updatedAt,
-                        createdAt = detail.createdAt
+                        updatedAt = registration.updatedAt,
+                        createdAt = registration.createdAt
                     )
                 }
             } else {

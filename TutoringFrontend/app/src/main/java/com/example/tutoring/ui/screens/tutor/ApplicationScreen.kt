@@ -47,6 +47,7 @@ data class CourseRegistration(
     val updatedAt: String? = null,  // 可为空
     val status: String = "",
     val teacherName: String = "",
+    val studentName: String = "",
     val registrationId: Int = 0,
     val studentId: Int = 0
 )
@@ -91,10 +92,11 @@ fun ApplicationScreen(navController: NavHostController, loadingViewModel: Loadin
                         tutorId = detail.tutorId,
                         subject = detail.subject,
                         status = registration.status,
-                        updatedAt = detail.updatedAt,
-                        createdAt = detail.createdAt,
+                        updatedAt = registration.updatedAt,
+                        createdAt = registration.createdAt,
                         registrationId = registration.registrationId,
                         studentId = registration.studentId,
+                        studentName = registration.studentNickname,
                         teacherName = ""
                     )
                 } ?: emptyList()
@@ -127,6 +129,7 @@ fun ApplicationScreen(navController: NavHostController, loadingViewModel: Loadin
                         createdAt = detail.createdAt,
                         registrationId = registration.registrationId,
                         studentId = registration.studentId,
+                        studentName = registration.studentNickname,
                         teacherName = ""
                     )
                 }
@@ -194,7 +197,9 @@ fun ApplicationScreen(navController: NavHostController, loadingViewModel: Loadin
                         updated[index] = updated[index].copy(status = "Pending")
                         courses = updated
                     },
-                    navController
+                    navController,
+                    onDelete = {},
+                    onUpdate = {}
                 )
             }
 

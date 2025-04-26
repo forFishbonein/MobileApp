@@ -6,5 +6,6 @@ data class UserInfo(
     val createdAt: String = "",
     val nickname: String = "",
     val bio: String = "",
-    val avatarUrl: String = ""
+    val avatarUrl: String = "",
+    val userId: Int = 0
 )

@@ -86,7 +86,7 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         List<User> userList = userDao.selectList(userQuery);
 
         Map<Long, String> userIdToNickname = userList.stream()
-                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+                .collect(Collectors.toMap(User::getUserId, user -> user.getNickname() != null ? user.getNickname() : ""));
 
         // 4. 拼装 RegistrationResponseDTO
         return registrations.stream().map(reg -> {

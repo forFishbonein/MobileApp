@@ -70,7 +70,7 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
         scope.launch {
             try {
                 val response = apiService.listCourses(courseName, subjectName)
-                allCourses = response.data as List<Course>
+                allCourses = (response.data as List<Course>)
                 val response2 = apiService.listStudentRegistrations()
                 allRegistrations = response2.data as List<Registration>
                 @Suppress("UNCHECKED_CAST")

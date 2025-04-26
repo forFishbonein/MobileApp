@@ -2,11 +2,13 @@ package com.example.tutoring.network
 
 import com.example.tutoring.data.Course
 import com.example.tutoring.data.Lesson
+import com.example.tutoring.data.LessonsProcess
 import com.example.tutoring.data.Registration
 import com.example.tutoring.ui.screens.tutor.CourseRegistration
 import com.example.tutoring.ui.screens.tutor.LessonRequest
 import okhttp3.MultipartBody
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -61,6 +63,12 @@ interface ApiService {
     @POST("/course/create")
     suspend fun createCourse(@Body request: Map<String, String>): CommonResponse
 
+    @PUT("/course/{courseId}")
+    suspend fun updateCourse(@Body request: Map<String, String>, @Path("courseId") courseId: Int?): CommonResponse
+
+    @DELETE("/course/{courseId}")
+    suspend fun deleteCourse(@Path("courseId") courseId: Int?): CommonResponse
+
     @GET("/course/{courseId}")
     suspend fun getCourseDetail(
         @Path("courseId") courseId: Int
@@ -87,6 +95,13 @@ interface ApiService {
         @Path("courseId") courseId: Int?
     ): SpecialResponse<List<Lesson>>
 
+    @GET("/lessonProgress/course/{courseId}/student/{studentId}")
+    suspend fun getLessonProgressByCourseAndStudent(
+        @Path("courseId") courseId: Int?,
+        @Path("studentId") studentId: Int?
+    ): SpecialResponse<List<LessonsProcess>>
+
+
     @POST("/lesson/create")
     suspend fun createLesson(@Body request: Lesson): CommonResponse
 
@@ -98,9 +113,14 @@ interface ApiService {
     @PUT("/lesson/{lessonId}")
     suspend fun updateLesson(@Body request: LessonRequest, @Path("lessonId") lessonId: Int?): CommonResponse
 
-    @PUT("/lesson/{lessonId}/complete")
-    suspend fun completeLesson(
-        @Path("lessonId") lessonId: Int
+//    @PUT("/lesson/{lessonId}/complete")
+//    suspend fun completeLesson(
+//        @Path("lessonId") lessonId: Int
+//    ): CommonResponse
+
+    @POST("/lessonProgress/{lessonId}/{courseId}/completeSelf")
+    suspend fun completeLessonForSelf(
+        @Path("lessonId") lessonId: Int,@Path("courseId") courseId: Int
     ): CommonResponse
 
     @Multipart
