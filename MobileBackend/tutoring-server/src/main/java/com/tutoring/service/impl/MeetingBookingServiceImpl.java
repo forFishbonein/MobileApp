@@ -110,7 +110,7 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
 
         return lambdaQuery()
                 .eq(MeetingBooking::getTutorId, tutorId)
-                .eq(MeetingBooking::getStatus, MeetingBooking.BookingStatus.Pending)
+//                .eq(MeetingBooking::getStatus, MeetingBooking.BookingStatus.Pending)
                 .orderByAsc(MeetingBooking::getCreatedAt)
                 .list()
                 .stream()

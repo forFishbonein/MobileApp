@@ -15,7 +15,7 @@ public interface MeetingBookingService extends IService<MeetingBooking> {
 
     void reject (Long bookingId, Long tutorId, String comment);
 
-    /** Tutor 查看待审批 */
+    /** Tutor 查看所有 */
     List<MeetingRequestVO> listPending(Long tutorId);
 
     /** 学生查询自己的全部订单（可按状态筛选，null=全部） */
