@@ -1,5 +1,6 @@
 package com.tutoring.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutoring.dao.MeetingBookingDao;
 import com.tutoring.dto.MeetingBookingRequestDTO;
@@ -11,13 +12,17 @@ import com.tutoring.exception.CustomException;
 import com.tutoring.service.MeetingBookingService;
 import com.tutoring.service.TutorAvailabilityService;
 import com.tutoring.service.UserService;
+import com.tutoring.vo.MeetingBookingVO;
 import com.tutoring.vo.MeetingRequestVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -124,5 +129,49 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MeetingBookingVO> listBookings(Long studentId,
+                                               MeetingBooking.BookingStatus status) {
+
+        LambdaQueryWrapper<MeetingBooking> qw = new LambdaQueryWrapper<>();
+        qw.eq(MeetingBooking::getStudentId, studentId)
+                .orderByDesc(MeetingBooking::getCreatedAt);
+        if (status != null) {
+            qw.eq(MeetingBooking::getStatus, status);
+        }
+        List<MeetingBooking> list = list(qw);
+        if (list.isEmpty()) return Collections.emptyList();
+
+        // 批量取 Tutor 和 Availability，避免 N+1
+        Set<Long> tutorIds = list.stream()
+                .map(MeetingBooking::getTutorId)
+                .collect(Collectors.toSet());
+        Map<Long,String> tutorMap = userSvc.listByIds(tutorIds).stream()
+                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+
+        Set<Long> availIds = list.stream()
+                .map(MeetingBooking::getAvailabilityId)
+                .collect(Collectors.toSet());
+        Map<Long,TutorAvailability> slotMap =
+                availabilitySvc.listByIds(availIds).stream()
+                        .collect(Collectors.toMap(
+                                TutorAvailability::getAvailabilityId,
+                                v -> v));
+
+        return list.stream().map(b -> {
+            TutorAvailability slot = slotMap.get(b.getAvailabilityId());
+            return MeetingBookingVO.builder()
+                    .bookingId(b.getBookingId())
+                    .tutorId(b.getTutorId())
+                    .tutorNickname(tutorMap.getOrDefault(b.getTutorId(), "Unknown"))
+                    .content(b.getRequestContent())
+                    .status(b.getStatus())
+                    .startTime(slot == null ? null : slot.getStartTime())
+                    .endTime(slot == null ? null : slot.getEndTime())
+                    .createdAt(b.getCreatedAt())
+                    .build();
+        }).collect(Collectors.toList());
     }
 }
