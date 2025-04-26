@@ -62,4 +62,18 @@ public class MailServiceImpl implements MailService {
                 "If you did not request a password reset, please ignore this email.";
         sendMail(toEmail, subject, text);
     }
+
+    @Async("mailAsyncExecutor")
+    @Override
+    public void sendLessonNotification(String toEmail,
+                                       String courseName,
+                                       String lessonTitle) {
+
+        String subject = "New lesson released in \"" + courseName + '"';
+        String text = "Hi there,\n\n" +
+                "A new lesson \"" + lessonTitle + "\" has been published in course \"" +
+                courseName + "\". Log in to check it out.\n\n" +
+                "Best regards,\nTutoring Platform";
+        sendMail(toEmail, subject, text);
+    }
 }
