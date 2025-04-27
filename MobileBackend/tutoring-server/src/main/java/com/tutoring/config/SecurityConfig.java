@@ -53,7 +53,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests()
 
                 // 其他请求需要鉴权
-                .antMatchers("/user/register","/user/login","/user/send-code"
+                .antMatchers("/user/register","/user/login","/user/send-code","/user/forgot-password","/user/reset-password"
                 // swagger
                         // http://localhost:8080/doc.html  swagger地址，后期上线可以关闭
                 ,"/favicon.ico", "/swagger-resources/**", "/swagger-ui.html", "/doc.html", "/webjars/**",
