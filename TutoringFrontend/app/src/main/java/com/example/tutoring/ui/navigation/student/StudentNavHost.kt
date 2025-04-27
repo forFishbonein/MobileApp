@@ -1,5 +1,7 @@
 package com.example.tutoring.ui.navigation.student
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -10,7 +12,9 @@ import com.example.tutoring.ui.screens.student.CoursesScreen
 import com.example.tutoring.ui.screens.student.HomeScreen
 import com.example.tutoring.ui.screens.student.LessonsScreen
 import com.example.tutoring.ui.screens.student.ProfileScreen
+import com.example.tutoring.ui.screens.student.common.StudentCourseHost
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StudentNavHost(navController: NavHostController,onLoginOut: () -> Unit,) {
     NavHost(
@@ -18,7 +22,8 @@ fun StudentNavHost(navController: NavHostController,onLoginOut: () -> Unit,) {
         startDestination = StudentNavRoutes.Home.route
     ) {
         composable(StudentNavRoutes.Home.route) { HomeScreen() }
-        composable(StudentNavRoutes.Courses.route) { CoursesScreen(navController) }
+        composable(StudentNavRoutes.Courses.route) { StudentCourseHost(navController, StudentNavRoutes.Courses.route) }
+        composable(StudentNavRoutes.Meetings.route) { StudentCourseHost(navController, StudentNavRoutes.Meetings.route) }
         composable(StudentNavRoutes.Profile.route) { ProfileScreen(onLoginOut) }
         composable(
             route = StudentNavRoutes.Lessons.route,

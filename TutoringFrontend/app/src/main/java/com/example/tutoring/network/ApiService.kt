@@ -1,9 +1,16 @@
 package com.example.tutoring.network
 
+import com.example.tutoring.data.AvailabilitySlotDetail
 import com.example.tutoring.data.Course
+import com.example.tutoring.data.CourseProgress
 import com.example.tutoring.data.Lesson
 import com.example.tutoring.data.LessonsProcess
+import com.example.tutoring.data.Meeting
 import com.example.tutoring.data.Registration
+import com.example.tutoring.data.TutorInfo
+import com.example.tutoring.ui.screens.student.BookMeetingRequest
+import com.example.tutoring.ui.screens.tutor.AvailabilityRequest
+import com.example.tutoring.ui.screens.tutor.AvailabilitySlot
 import com.example.tutoring.ui.screens.tutor.CourseRegistration
 import com.example.tutoring.ui.screens.tutor.LessonRequest
 import okhttp3.MultipartBody
@@ -135,9 +142,44 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): CommonResponse
 
+    //会议相关的
+    @GET("/tutor/meeting/availability")
+    suspend fun getSlotsAvailabilityTutor(): SpecialResponse<List<AvailabilitySlotDetail>>
+
+    @POST("/tutor/meeting/availability")
+    suspend fun updateSlotsAvailability(@Body request: AvailabilityRequest): CommonResponse
+
+    @GET("/tutor/meeting/requests/pending")
+    suspend fun getAllMeetingsTutor(): SpecialResponse<List<Meeting>>
+
+    @PUT("/tutor/meeting/requests/{id}/approve")
+    suspend fun approveMeeting(@Path("id") id: Int?): CommonResponse
+
+    @PUT("/tutor/meeting/requests/{id}/reject")
+    suspend fun rejectMeeting(@Path("id") id: Int?): CommonResponse
+
+    @GET("/student/meeting/tutor/{tutorId}/free-slots")
+    suspend fun getSlotsAvailabilityStudent(@Path("tutorId") tutorId: Int?): SpecialResponse<List<AvailabilitySlotDetail>>
+
+    @GET("/student/meeting/bookings")
+    suspend fun getAllMeetingsStudent(): SpecialResponse<List<Meeting>>
+
+    @POST("/student/meeting/book")
+    suspend fun bookAMeeting(@Body request: BookMeetingRequest): CommonResponse
+
+    @GET("/student/meeting/tutors")
+    suspend fun getAllBookableTutors(): SpecialResponse<List<TutorInfo>>
+
     //data science
-    @GET("/course/{courseId}/progress")
-    suspend fun getCourseProgress(
-        @Path("courseId") courseId: Long
-    ): CommonResponse
+    @GET("/tutor/dashboard")
+    suspend fun getTutorDashboardInfo(
+        @Query("courseId") courseId: Int? = null
+    ): SpecialResponse<CourseProgress>
+
+
+    @POST("/user/forgot-password")
+    suspend fun forgotPassword(@Body request: Map<String, String>): CommonResponse
+
+    @POST("/user/reset-password")
+    suspend fun resetPassword(@Body request: Map<String, String>): CommonResponse
 }
