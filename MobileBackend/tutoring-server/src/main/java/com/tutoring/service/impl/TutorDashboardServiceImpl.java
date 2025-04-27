@@ -1,102 +1,124 @@
 package com.tutoring.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.tutoring.dao.*;
 import com.tutoring.entity.*;
+import com.tutoring.enumeration.ErrorCode;
+import com.tutoring.exception.CustomException;
 import com.tutoring.service.TutorDashboardService;
 import com.tutoring.vo.LessonProgressItem;
+import com.tutoring.vo.StudentProgressVO;
 import com.tutoring.vo.TutorDashboardResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class TutorDashboardServiceImpl implements TutorDashboardService {
 
-    @Autowired
-    private CourseDao courseDao; // 查询课程
-
-    @Autowired
-    private CourseRegistrationDao courseRegistrationDao; // 查询注册记录
-
-    @Autowired
-    private LessonDao lessonDao; // 查询课程下的 Lesson
-
-    @Autowired
-    private LessonProgressDao lessonProgressDao; // 查询学生在 Lesson 上的进度
-
-    @Autowired
-    private UserDao userDao; // 查询学生信息
+    @Autowired private CourseDao             courseDao;
+    @Autowired private CourseRegistrationDao regDao;
+    @Autowired private LessonDao             lessonDao;
+    @Autowired private LessonProgressDao     progressDao;
+    @Autowired private UserDao               userDao;
 
     @Override
-    public TutorDashboardResponse getDashboardData(Long tutorId) {
-        TutorDashboardResponse response = new TutorDashboardResponse();
-        List<TutorDashboardResponse.CourseDashboardItem> courseItems = new ArrayList<>();
-
-        // 查询当前导师所有课程
-        QueryWrapper<Course> courseQuery = new QueryWrapper<>();
-        courseQuery.eq("tutor_id", tutorId);
-        List<Course> courses = courseDao.selectList(courseQuery);
-        if (courses != null) {
-            for (Course course : courses) {
-                TutorDashboardResponse.CourseDashboardItem courseItem = new TutorDashboardResponse.CourseDashboardItem();
-                courseItem.setCourseId(course.getCourseId());
-                courseItem.setCourseName(course.getCourseName());
-
-                // 查询审批通过的注册记录（状态为 approved）
-                QueryWrapper<CourseRegistration> regQuery = new QueryWrapper<>();
-                regQuery.eq("course_id", course.getCourseId())
-                        .eq("status", CourseRegistration.RegistrationStatus.approved);
-                List<CourseRegistration> registrations = courseRegistrationDao.selectList(regQuery);
-                int regCount = registrations != null ? registrations.size() : 0;
-                courseItem.setRegistrationCount(regCount);
-
-                List<TutorDashboardResponse.StudentProgress> studentProgressList = new ArrayList<>();
-                // 对于每个注册学生，查询他们在该课程中各 Lesson 的进度
-                if (registrations != null && !registrations.isEmpty()) {
-                    // 查询当前课程的所有 Lesson
-                    QueryWrapper<Lesson> lessonQuery = new QueryWrapper<>();
-                    lessonQuery.eq("course_id", course.getCourseId());
-                    List<Lesson> lessons = lessonDao.selectList(lessonQuery);
-
-                    for (CourseRegistration reg : registrations) {
-                        TutorDashboardResponse.StudentProgress studentProgress = new TutorDashboardResponse.StudentProgress();
-                        studentProgress.setStudentId(reg.getStudentId());
-                        // 获取学生昵称
-                        User student = userDao.selectById(reg.getStudentId());
-                        studentProgress.setStudentNickname(student != null ? student.getNickname() : "");
-
-                        List<LessonProgressItem> lessonProgressItems = new ArrayList<>();
-                        if (lessons != null) {
-                            for (Lesson lesson : lessons) {
-                                LessonProgressItem lpItem = new LessonProgressItem();
-                                lpItem.setLessonId(lesson.getLessonId());
-                                lpItem.setLessonTitle(lesson.getTitle());
-                                // 查询当前学生在该 Lesson 的进度
-                                QueryWrapper<LessonProgress> progressQuery = new QueryWrapper<>();
-                                progressQuery.eq("student_id", reg.getStudentId())
-                                        .eq("lesson_id", lesson.getLessonId());
-                                LessonProgress progress = lessonProgressDao.selectOne(progressQuery);
-                                if (progress == null) {
-                                    lpItem.setProgress(LessonProgress.ProgressStatus.not_started.name());
-                                } else {
-                                    lpItem.setProgress(progress.getStatus().name());
-                                }
-                                lessonProgressItems.add(lpItem);
-                            }
-                        }
-                        studentProgress.setLessonProgressItems(lessonProgressItems);
-                        studentProgressList.add(studentProgress);
-                    }
-                }
-                courseItem.setStudentProgressList(studentProgressList);
-                courseItems.add(courseItem);
-            }
+    public TutorDashboardResponse getDashboardData(Long tutorId, Long courseId) {
+        // 1. 验证课程存在且归属
+        Course course = courseDao.selectById(courseId);
+        if (course == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND, "Course not found.");
         }
-        response.setCourses(courseItems);
-        return response;
+        if (!course.getTutorId().equals(tutorId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN,
+                    "You are not the owner of this course.");
+        }
+
+        // 2. 统计总课时（避免除零）
+        int rawCount = lessonDao.selectCount(
+                new LambdaQueryWrapper<Lesson>()
+                        .eq(Lesson::getCourseId, courseId)
+        );
+        final int totalLessons = rawCount == 0 ? 1 : rawCount;
+
+
+        // 3. 查已批准注册学生
+        List<CourseRegistration> regs = regDao.selectList(
+                new LambdaQueryWrapper<CourseRegistration>()
+                        .eq(CourseRegistration::getCourseId, courseId)
+                        .eq(CourseRegistration::getStatus,
+                                CourseRegistration.RegistrationStatus.approved)
+        );
+
+        // 无学生直接返回空结构
+        if (regs.isEmpty()) {
+            return TutorDashboardResponse.builder()
+                    .courseId(courseId)
+                    .courseName(course.getCourseName())
+                    .studentCount(0)
+                    .students(Collections.emptyList())
+                    .build();
+        }
+
+        // 4. 批量拉昵称
+        List<Long> studentIds = regs.stream()
+                .map(CourseRegistration::getStudentId)
+                .collect(Collectors.toList());
+        Map<Long,String> nickMap = userDao.selectBatchIds(studentIds).stream()
+                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+
+        // 5. 查询已完成课时数：按 student_id 分组，COUNT(*) AS completed
+        QueryWrapper<LessonProgress> countWrapper = new QueryWrapper<>();
+        countWrapper.select("student_id", "COUNT(*) AS completed")
+                .eq("course_id", courseId)
+                .eq("status", LessonProgress.ProgressStatus.completed.name())
+                .groupBy("student_id");
+
+        List<Map<String, Object>> rows = progressDao.selectMaps(countWrapper);
+        Map<Long, Integer> doneMap = rows.stream().collect(Collectors.toMap(
+                r -> ((Number) r.get("student_id")).longValue(),
+                r -> ((Number) r.get("completed")).intValue()
+        ));
+
+        // 6. 构造并按完成度降序排序学生进度列表
+        List<StudentProgressVO> students = studentIds.stream()
+                .map(sid -> {
+                    int done = doneMap.getOrDefault(sid, 0);
+                    int pct  = (int) Math.round(done * 100.0 / totalLessons);
+                    return StudentProgressVO.builder()
+                            .studentId(sid)
+                            .nickname(nickMap.getOrDefault(sid, "Unknown"))
+                            .progressPercent(pct)
+                            .build();
+                })
+                // 用 comparingInt 消除泛型警告
+                .sorted(Comparator.comparingInt(StudentProgressVO::getProgressPercent).reversed())
+                .collect(Collectors.toList());
+
+        return TutorDashboardResponse.builder()
+                .courseId(courseId)
+                .courseName(course.getCourseName())
+                .studentCount(students.size())
+                .students(students)
+                .build();
+    }
+
+    @Override
+    public List<TutorDashboardResponse> getAllDashboardData(Long tutorId) {
+        // 查询该 tutor 的所有课程
+        List<Course> courses = courseDao.selectList(
+                new LambdaQueryWrapper<Course>()
+                        .eq(Course::getTutorId, tutorId)
+        );
+        // 对每门课生成 Dashboard
+        return courses.stream()
+                .map(c -> getDashboardData(tutorId, c.getCourseId()))
+                .collect(Collectors.toList());
     }
 }

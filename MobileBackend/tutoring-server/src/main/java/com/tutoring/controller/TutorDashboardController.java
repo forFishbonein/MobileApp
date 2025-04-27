@@ -11,30 +11,40 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/tutor/dashboard")
 @Slf4j
 public class TutorDashboardController {
 
-    @Autowired
-    private TutorDashboardService tutorDashboardService;
+    @Autowired private TutorDashboardService dashboardSvc;
 
     /**
      * GET /tutor/dashboard
-     * 获取当前导师仪表盘数据，显示各课程注册学生数以及各学生各Lesson的学习进度
+     * GET /tutor/dashboard?courseId=123
      */
     @GetMapping
-    public RestResult<TutorDashboardResponse> getDashboard() {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated or session is invalid.");
+    public RestResult<?> dashboard(@RequestParam(required = false) Long courseId) {
+        Long tutorId = SecurityUtils.getCurrentUserId();
+        if (tutorId == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED,
+                    "User is not authenticated or session is invalid.");
         }
-        if (SecurityUtils.getCurrentUserRole() != User.Role.tutor) {
-            throw new CustomException(ErrorCode.FORBIDDEN, "Only tutors can view dashboard.");
+
+        if (courseId != null) {
+            // 单课程
+            TutorDashboardResponse vo =
+                    dashboardSvc.getDashboardData(tutorId, courseId);
+            return RestResult.success(vo, "Dashboard data retrieved.");
+        } else {
+            // 全部课程
+            List<TutorDashboardResponse> all =
+                    dashboardSvc.getAllDashboardData(tutorId);
+            return RestResult.success(all, "Dashboard data for all courses retrieved.");
         }
-        TutorDashboardResponse dashboardData = tutorDashboardService.getDashboardData(currentUserId);
-        return RestResult.success(dashboardData, "Dashboard data retrieved successfully.");
     }
 }
