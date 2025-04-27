@@ -70,8 +70,17 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
         List<Long> studentIds = regs.stream()
                 .map(CourseRegistration::getStudentId)
                 .collect(Collectors.toList());
-        Map<Long,String> nickMap = userDao.selectBatchIds(studentIds).stream()
-                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+//        Map<Long,String> nickMap = userDao.selectBatchIds(studentIds).stream()
+//                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+        Map<Long, String> nickMap = userDao.selectBatchIds(studentIds).stream()
+                .collect(Collectors.toMap(
+                        User::getUserId,
+                        user -> {
+                            String nick = user.getNickname();
+                            return nick != null ? nick : "Unknown";   // 避免 null
+                        },
+                        (oldV, newV) -> oldV  // 如果 key 重复，保留第一个
+                ));
 
         // 5. 查询已完成课时数：按 student_id 分组，COUNT(*) AS completed
         QueryWrapper<LessonProgress> countWrapper = new QueryWrapper<>();
@@ -81,10 +90,18 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                 .groupBy("student_id");
 
         List<Map<String, Object>> rows = progressDao.selectMaps(countWrapper);
-        Map<Long, Integer> doneMap = rows.stream().collect(Collectors.toMap(
-                r -> ((Number) r.get("student_id")).longValue(),
-                r -> ((Number) r.get("completed")).intValue()
+//        Map<Long, Integer> doneMap = rows.stream().collect(Collectors.toMap(
+//                r -> ((Number) r.get("student_id")).longValue(),
+//                r -> ((Number) r.get("completed")).intValue()
+//        ));
+        Map<Long,Integer> doneMap = rows.stream()
+                .filter(r -> r.get("completed") != null)      // 只留下有 completed 的行
+                .collect(Collectors.toMap(
+                        r -> ((Number) r.get("student_id")).longValue(),
+                        r -> ((Number) r.get("completed")).intValue(),
+                        (a, b) -> a   // 如果 key 再重复，也保留第一个
         ));
+
 
         // 6. 构造并按完成度降序排序学生进度列表
         List<StudentProgressVO> students = studentIds.stream()
