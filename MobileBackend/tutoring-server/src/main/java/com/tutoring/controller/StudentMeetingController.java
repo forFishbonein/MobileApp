@@ -6,14 +6,17 @@ import com.tutoring.enumeration.ErrorCode;
 import com.tutoring.exception.CustomException;
 import com.tutoring.result.RestResult;
 import com.tutoring.service.MeetingBookingService;
+import com.tutoring.service.StudentMeetingService;
 import com.tutoring.service.TutorAvailabilityService;
 import com.tutoring.util.SecurityUtils;
+import com.tutoring.vo.TutorBasicInfoVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/student/meeting")
@@ -23,6 +26,9 @@ public class StudentMeetingController {
     @Autowired
     private TutorAvailabilityService availabilitySvc;
     @Autowired private MeetingBookingService bookingSvc;
+
+    @Autowired
+    private StudentMeetingService studentMeetingService;
 
     /** Student query tutor free slots */
     @GetMapping("/tutor/{tutorId}/free-slots")
@@ -64,5 +70,20 @@ public class StudentMeetingController {
         return RestResult.success(
                 bookingSvc.listBookings(studentId, s),
                 "Bookings retrieved.");
+    }
+
+    /**
+     * GET /student/meeting/tutors
+     * 列出当前登录学生可预约的所有老师
+     */
+    @GetMapping("/tutors")
+    public RestResult<List<TutorBasicInfoVO>> listBookableTutors() {
+        Long studentId = SecurityUtils.getCurrentUserId();
+        if (studentId == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED,
+                    "Unauthorized or session expired.");
+        }
+        List<TutorBasicInfoVO> tutors = studentMeetingService.listBookableTutors(studentId);
+        return RestResult.success(tutors, "Bookable tutors retrieved successfully.");
     }
 }
