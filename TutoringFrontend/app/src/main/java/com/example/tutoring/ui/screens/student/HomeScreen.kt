@@ -166,7 +166,7 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 课程列表
+        // Courses List
         LazyColumn(
             state = lazyListState,
             verticalArrangement = Arrangement.spacedBy(8.dp),
