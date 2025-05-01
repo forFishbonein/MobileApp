@@ -7,6 +7,7 @@ sealed class TutorNavRoutes(val route: String) {
     data object Application : TutorNavRoutes("tutor_application")
     data object Courses : TutorNavRoutes("tutor_courses")
     data object Profile : TutorNavRoutes("tutor_profile")
+    data object Meetings : TutorNavRoutes("tutor_meeting")
     data object Lessons : TutorNavRoutes("tutor_lessons/{courseId}")
     data object AddLesson : TutorNavRoutes("tutor_add_lesson?courseId={courseId}&lesson={lesson}")
 }

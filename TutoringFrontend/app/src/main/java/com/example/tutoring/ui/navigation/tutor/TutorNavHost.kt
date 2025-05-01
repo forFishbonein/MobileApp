@@ -1,5 +1,7 @@
 package com.example.tutoring.ui.navigation.tutor
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,9 +15,12 @@ import com.example.tutoring.ui.screens.tutor.CoursesScreen
 import com.example.tutoring.ui.screens.tutor.HomeScreen
 import com.example.tutoring.ui.screens.tutor.ProfileScreen
 import com.example.tutoring.ui.screens.tutor.AddLessonScreen
+import com.example.tutoring.ui.screens.tutor.MeetingScreen
+import com.example.tutoring.ui.screens.tutor.common.TutorCourseHost
 import com.google.gson.Gson
 import java.net.URLDecoder
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TutorNavHost(navController: NavHostController,onLoginOut: () -> Unit) {
     NavHost(
@@ -24,7 +29,8 @@ fun TutorNavHost(navController: NavHostController,onLoginOut: () -> Unit) {
     ) {
         composable(TutorNavRoutes.Home.route) { HomeScreen() }
         composable(TutorNavRoutes.Application.route) { ApplicationScreen(navController) }
-        composable(TutorNavRoutes.Courses.route) { CoursesScreen(navController) }
+        composable(TutorNavRoutes.Courses.route) { TutorCourseHost(navController,TutorNavRoutes.Courses.route) }
+        composable(TutorNavRoutes.Meetings.route) { TutorCourseHost(navController,TutorNavRoutes.Meetings.route) }
         composable(TutorNavRoutes.Profile.route) { ProfileScreen(onLoginOut) }
         composable(
             route = TutorNavRoutes.Lessons.route,

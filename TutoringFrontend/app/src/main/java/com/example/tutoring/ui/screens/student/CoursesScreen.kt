@@ -1,5 +1,6 @@
 package com.example.tutoring.ui.screens.student
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingViewModel = viewModel()) {
+fun CoursesScreen(navController: NavHostController, onCoursesLoaded: (tutorIds: List<Int>) -> Unit, loadingViewModel: LoadingViewModel = viewModel()) {
     // Global load indicator (overlay)
     if (loadingViewModel.isHttpLoading) {
         Box(
@@ -77,6 +78,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                     // Merge data: Duplicate fields use the value returned by detail, leaving status in registration
                     Course(
                         courseId = registration.courseId,
+                        tutorId = detail.tutorId,
                         courseName = detail.courseName,
                         description = detail.description,
                         subject = detail.subject,
@@ -87,6 +89,11 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                 } ?: emptyList()
                 page++
                 loadingViewModel.setLoading(false)
+                val tutorIds = courses.map { it.tutorId }
+                // 去重
+                val uniqueTutorIds = tutorIds.distinct()
+                Log.d("CourseScreen", "当前可选 tutorIds = $tutorIds")
+                onCoursesLoaded(uniqueTutorIds)
             } catch (e: Exception) {
                 loadingViewModel.setLoading(false)
             }

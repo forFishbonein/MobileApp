@@ -1,5 +1,7 @@
 package com.example.tutoring.ui.navigation.tutor
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -12,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TutorMainScreen(onLoginOut: () -> Unit) {
@@ -21,10 +24,11 @@ fun TutorMainScreen(onLoginOut: () -> Unit) {
     Scaffold(
         topBar = {
             val titleText = when {
-                currentRoute?.startsWith("tutor_home") == true -> "Home-Tutor"
+                currentRoute?.startsWith("tutor_home") == true -> "TutorDashboard"
                 currentRoute?.startsWith("tutor_application") == true -> "Application"
                 currentRoute?.startsWith("tutor_courses") == true -> "Courses"
                 currentRoute?.startsWith("tutor_profile") == true -> "Profile"
+                currentRoute?.startsWith("tutor_meeting") == true -> "Meetings"
                 currentRoute?.startsWith("tutor_lessons") == true -> "Lessons"
                 else -> "Tutor"
             }

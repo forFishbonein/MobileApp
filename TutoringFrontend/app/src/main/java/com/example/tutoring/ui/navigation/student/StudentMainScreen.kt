@@ -36,6 +36,7 @@ fun StudentMainScreen(
                 currentRoute?.startsWith("student_home") == true -> "Home-Student"
                 currentRoute?.startsWith("student_courses") == true -> "Courses"
                 currentRoute?.startsWith("student_profile") == true -> "Profile"
+                currentRoute?.startsWith("student_meeting") == true -> "Meetings"
                 currentRoute?.startsWith("student_lessons") == true -> "Lessons"
                 else -> "Student"
             }

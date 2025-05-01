@@ -35,8 +35,16 @@ object NetworkClient {
         OkHttpClient.Builder()
             .addInterceptor(TokenInterceptor { tokenProvider() })
             .addInterceptor(ResponseInterceptor { errorHandler(it) })
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+//            .connectTimeout(30, TimeUnit.SECONDS)
+//            .readTimeout(30, TimeUnit.SECONDS)
+            // 建立连接的超时时间（默认 10 秒）
+            .connectTimeout(600, TimeUnit.SECONDS)
+            // 服务器处理后开始响应的读超时（默认 10 秒）
+            .readTimeout(600, TimeUnit.SECONDS)
+            // 发送请求体时的写超时（默认 10 秒）
+            .writeTimeout(600, TimeUnit.SECONDS)
+            // 整个 call 的超时时间，0 表示不限制
+            .callTimeout(0, TimeUnit.MILLISECONDS)
             // Add a log blocker，output to Logcat
             .addInterceptor(logging)
             .build()
