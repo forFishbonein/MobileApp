@@ -48,6 +48,7 @@ public class Lesson implements Serializable {
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    @TableField(value = "is_completed", fill = FieldFill.INSERT_UPDATE)
     private boolean isCompleted;
 }
 
