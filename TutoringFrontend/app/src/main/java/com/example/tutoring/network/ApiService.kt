@@ -142,7 +142,7 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): CommonResponse
 
-    //会议相关的
+    //Related to the meeting
     @GET("/tutor/meeting/availability")
     suspend fun getSlotsAvailabilityTutor(): SpecialResponse<List<AvailabilitySlotDetail>>
 

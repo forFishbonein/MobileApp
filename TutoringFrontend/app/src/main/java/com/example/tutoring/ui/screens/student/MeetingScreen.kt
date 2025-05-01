@@ -30,21 +30,14 @@ import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
 import com.example.tutoring.utils.ErrorNotifier
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
 import com.example.tutoring.utils.LoadingViewModel
-import com.google.gson.Gson
 
-// 单个可用时段
 data class AvailabilitySlot(
-    val availabilityId: Int,   // 唯一 ID，如果是新增，可以置 0
-    val startTime: String,     // 格式例如 "2025-04-26T14:00:00"
-    val endTime: String        // 格式例如 "2025-04-26T15:00:00"
+    val availabilityId: Int,
+    val startTime: String,
+    val endTime: String
 )
 
-// 请求体封装
 data class AvailabilityRequest(
     val availabilitySlots: List<AvailabilitySlot>
 )
@@ -89,13 +82,13 @@ fun MeetingScreen(
     // --- State ---
     val slots = remember { mutableStateListOf<AvailabilitySlotDetail>() }
     val meetings = remember { mutableStateListOf<Meeting>() }
-    // 分组：已确认 vs 其他
+    // Group: Confirmed vs Others
     val confirmed = meetings.filter { it.status == "Confirmed" }
     val others    = meetings.filter { it.status != "Confirmed" }
     var slotToBook    by remember { mutableStateOf<AvailabilitySlotDetail?>(null) }
     var bookingContent by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    // 拉可预约时段
+    // Available time slots for reservation
     fun loadSlots(tutorId: Int) {
         scope.launch {
             try {
@@ -108,7 +101,7 @@ fun MeetingScreen(
         }
     }
 
-    // 拉学生的所有预约
+    // All the reservations for students
     fun loadMeetings() {
         scope.launch {
             try {
@@ -121,8 +114,8 @@ fun MeetingScreen(
         }
     }
 //    LaunchedEffect(tutorIds) {
-//        Log.d("MeetingScreen", "当前可选 tutorIds = $tutorIds")
-//        // 如果非空，就做一次初始化加载
+//        Log.d("MeetingScreen", "Currently optional tutorIds = $tutorIds")
+//        // If it is not empty, perform an initialization loading once
 //        tutorIds.firstOrNull()?.let { loadSlots(it) }
 //    }
     val tutors = remember { mutableStateListOf<TutorInfo>() }
@@ -133,8 +126,8 @@ fun MeetingScreen(
                 val resp = apiService.getAllBookableTutors()
                 tutors.clear()
                 tutors.addAll(resp.data ?: emptyList())
-                selectedTutorId = tutors.map { it.tutorId }.firstOrNull() //设置默认的selectedTutorId
-                selectedTutorName = tutors.map { it.tutorNickname }.firstOrNull() //设置默认的selectedTutorName
+                selectedTutorId = tutors.map { it.tutorId }.firstOrNull() //Set the default selectedTutorId
+                selectedTutorName = tutors.map { it.tutorNickname }.firstOrNull() //Set the default selectedTutorName
                 loadSlots(selectedTutorId!!)
                 loadingViewModel.setLoading(false)
             } catch (e: Exception) {
@@ -143,10 +136,9 @@ fun MeetingScreen(
             }
         }
     }
-    // 首次进入加载
     LaunchedEffect(Unit) {
         loadMeetings()
-        //这里需要加载 老师-老师 id的对应列表，也就是tutorIds ，同时在最后 selectedTutorId = tutorIds.firstOrNull()
+        //Here, the corresponding list of teacher-teacher ids needs to be loaded, that is, tutorIds. Meanwhile, at the end, select tutorID = tutorids.firstornull ()
         loadTutors()
     }
 
@@ -157,7 +149,7 @@ fun MeetingScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // —— 下拉框：选择导师 ——
+        // —— Drop-down box: Select the supervisor ——
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -245,8 +237,8 @@ fun MeetingScreen(
             }
         }
 
-        // 预约确认对话框
-        // —— 在这里弹出含输入框的对话框 ——
+        // Reservation confirmation dialog box
+        // —— A dialog box with an input box pops up here ——
         slotToBook?.let { s ->
             AlertDialog(
                 onDismissRequest = {
@@ -305,7 +297,7 @@ fun MeetingScreen(
         }
 
         Divider()
-        // —— 待参加会议 区块 ——
+        // —— The meeting block to be attended ——
         if (confirmed.isNotEmpty()) {
             Text(
                 "Upcoming Meetings (${confirmed.size})",
@@ -329,7 +321,7 @@ fun MeetingScreen(
             }
         }
         Divider()
-        // —— 其他会议 区块 ——
+        // —— other meeting ——
         if (others.isNotEmpty()) {
             Text(
                 "My Bookings (${others.size})",
@@ -374,7 +366,6 @@ fun MeetingScreen(
 //                        Column(Modifier.padding(12.dp)) {
 //                            Text(
 //                                text = "With ${m.tutorNickname}",
-//                                // 或者 m.tutorNickname 取决于后端字段
 //                                style = MaterialTheme.typography.bodyLarge
 //                            )
 //                            Spacer(Modifier.height(4.dp))
@@ -412,16 +403,15 @@ fun MeetingCard(meeting: Meeting) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(4.dp))
-            // 状态区，用 Row 撑满宽度，然后把 Chip 推到最右侧
+            // In the state area, fill the width with rows and then push the Chip to the far right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 AssistChip(
-                    onClick = { /* 不可点击 */ },
+                    onClick = { /* do nothing */ },
                     label = { Text(meeting.status) },
-                    enabled = false, //false的时候强制是灰色，不会展示颜色
-                    // 如果想让它更往右一点，可以再加个 offset
+                    enabled = false, //When it is false, it is forced to be gray and no color will be displayed
                     modifier = Modifier
                         .defaultMinSize(minHeight = 32.dp)
                         .offset(x = 4.dp),

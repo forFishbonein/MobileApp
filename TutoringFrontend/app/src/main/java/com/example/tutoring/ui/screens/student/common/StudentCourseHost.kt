@@ -21,15 +21,15 @@ import com.example.tutoring.utils.ErrorNotifier
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StudentCourseHost(navController: NavHostController, currentRoute: String) {
-    // 1) 保存 tutorIds
+    // 1) Save tutorIds
     var tutorIds by remember { mutableStateOf<List<Int>>(emptyList()) }
-    // 2) 标记课程加载完成
+    // 2) Mark that the course loading is complete
     var coursesLoaded by remember { mutableStateOf(false) }
 
     Column {
         StudentCourseTopNav(currentRoute) { destination ->
 //            if (destination == StudentNavRoutes.Meetings.route && !coursesLoaded) {
-//                // 课程没加载完时拦截，并给提示
+//                // Intercept when the course is not fully loaded and give a prompt
 //                ErrorNotifier.showError("The course list has not been fully loaded yet. Please try again later.")
 //                return@StudentCourseTopNav
 //            }
@@ -49,11 +49,11 @@ fun StudentCourseHost(navController: NavHostController, currentRoute: String) {
 
         when (currentRoute) {
             StudentNavRoutes.Courses.route -> {
-                // 3. CoursesScreen 加载完成后调用 onCoursesLoaded()
+                // 3. Call onCoursesLoaded() after CoursesScreen is loaded.
                 CoursesScreen(
                     navController = navController,
                     onCoursesLoaded = { ids ->
-                        // 这里拿到 CoursesScreen 回传的 tutorIds
+                        // Here I got the tutorIds returned by CoursesScreen
                         tutorIds = ids
                         Log.d("CourseHost", "当前可选 tutorIds = $tutorIds")
                         coursesLoaded = true
@@ -63,12 +63,12 @@ fun StudentCourseHost(navController: NavHostController, currentRoute: String) {
 
             StudentNavRoutes.Meetings.route -> {
 //                if (!coursesLoaded || tutorIds.isEmpty()) {
-//                    // 还没加载完 tutors，就显示占位
+//                    // Before tutors was fully loaded, a placeholder was displayed
 //                    Box(Modifier.fillMaxSize(), Alignment.Center) {
 //                        Text("Loading tutors…")
 //                    }
 //                } else {
-//                    // tutorIds 一定是非空，才真正去渲染
+//                    // tutorIds must be non-empty before they are truly rendered
 //                    key(tutorIds) {
 //                        MeetingScreen(tutorIds = tutorIds)
 //                    }

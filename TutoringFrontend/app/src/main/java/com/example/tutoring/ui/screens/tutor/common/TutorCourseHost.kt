@@ -15,7 +15,7 @@ import com.example.tutoring.ui.screens.tutor.MeetingScreen
 fun TutorCourseHost(navController: NavHostController, currentRoute: String) {
     Column {
         TutorCourseTopNav(currentRoute) { destination ->
-            // 如果当前路由不同再导航，避免重复入栈
+            // If the current route is different, navigate again to avoid duplicate pushing onto the stack
             if (destination != currentRoute) {
                 navController.navigate(destination) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -24,20 +24,19 @@ fun TutorCourseHost(navController: NavHostController, currentRoute: String) {
                 }
             }
         }
-        // 根据 currentRoute 显示不同的内容
+        // Display different contents according to currentRoute
         when (currentRoute) {
             TutorNavRoutes.Courses.route -> {
-                // 课程列表页面
+                // Course list page
                 CoursesScreen(
                     navController
                 )
             }
             TutorNavRoutes.Meetings.route -> {
-                // 预约管理页面
+                // Reservation Management page
                 MeetingScreen()
             }
             else -> {
-                // 兜底
                 Text("Unknown route")
             }
         }

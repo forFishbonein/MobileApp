@@ -38,14 +38,12 @@ import java.util.*
 import com.example.tutoring.utils.LoadingViewModel
 import com.google.gson.Gson
 
-// 单个可用时段
 data class AvailabilitySlot(
-    val availabilityId: Int,   // 唯一 ID，如果是新增，可以置 0
-    val startTime: String,     // 格式例如 "2025-04-26T14:00:00"
-    val endTime: String        // 格式例如 "2025-04-26T15:00:00"
+    val availabilityId: Int,
+    val startTime: String,
+    val endTime: String
 )
 
-// 请求体封装
 data class AvailabilityRequest(
     val availabilitySlots: List<AvailabilitySlot>
 )
@@ -56,7 +54,6 @@ data class Slot(
     val endTime: String,
     val isBooked: Boolean,
 )
-// 在 SlotItem 或者全局定义：
 @RequiresApi(Build.VERSION_CODES.O)
 private val slotFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 @RequiresApi(Build.VERSION_CODES.O)
@@ -76,7 +73,6 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val apiService = NetworkClient.createService(ApiService::class.java)
-    // --- 日期选择相关 state ---
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val datePicker = DatePickerDialog(
@@ -88,21 +84,18 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
         selectedDate.monthValue - 1,
         selectedDate.dayOfMonth
     ).apply {
-        // 限制只能选择今天或之后的日期
+        // The restriction is that only today or later dates can be selected
         datePicker.minDate = Calendar.getInstance().timeInMillis
     }
 
-    // --- 时间选择相关 state ---
-    // 只存时分
+    // --- time select state ---
     var startTime by remember { mutableStateOf("Select Start") }
     var endTime   by remember { mutableStateOf("Select End") }
 
-    // 默认用当前时刻做弹窗初始值
     val cal = Calendar.getInstance()
     val hour0   = cal.get(Calendar.HOUR_OF_DAY)
     val minute0 = cal.get(Calendar.MINUTE)
 
-    // 开始时段选择器
     val startPicker = TimePickerDialog(
         context,
         { _, h, m ->
@@ -110,7 +103,6 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
         },
         hour0, minute0, true
     )
-    // 结束时段选择器
     val endPicker = TimePickerDialog(
         context,
         { _, h, m ->
@@ -119,10 +111,9 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
         hour0, minute0, true
     )
 
-    // --- Slot 列表  ---
+    // --- Slot list  ---
     val slots = remember { mutableStateListOf<Slot>() }
     var nextId by remember { mutableStateOf(1) }
-    // 新增：记录哪一条 slot 正在被请求删除
     var slotToDelete by remember { mutableStateOf<Slot?>(null) }
     fun getAllSlots(){
         coroutineScope.launch {
@@ -132,9 +123,9 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 response.data?.forEach { avail ->
                     slots += Slot(
                         availabilityId = avail.availabilityId,
-                        startTime      = avail.startTime,  // ISO 格式
+                        startTime      = avail.startTime,
                         endTime        = avail.endTime,
-                        isBooked       = avail.isBooked             // 或根据后端字段决定
+                        isBooked       = avail.isBooked
                     )
                     nextId = maxOf(nextId, avail.availabilityId + 1)
                 }
@@ -145,9 +136,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
         }
     }
-    // 示例会议列表，替换成你自己的数据
     var meetings = remember { mutableStateListOf<Meeting>() }
-    // 哪个 meeting 在请求批准／拒绝
     var meetingToApprove by remember { mutableStateOf<Meeting?>(null) }
     var meetingToReject  by remember { mutableStateOf<Meeting?>(null) }
     fun getAllMeetings(){
@@ -155,9 +144,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             loadingViewModel.setLoading(true)
             try {
                 val response = apiService.getAllMeetingsTutor()
-                // 先清空旧数据
                 meetings.clear()
-                // 再把后端列表一次性加进来
                 meetings.addAll(response.data ?: emptyList())
                 loadingViewModel.setLoading(false)
             } catch (e: Exception) {
@@ -166,7 +153,6 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
         }
     }
-    // --- 启动时从服务端拉初始数据 ---
     LaunchedEffect(Unit) {
         getAllSlots()
         getAllMeetings()
@@ -179,12 +165,12 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 日期按钮
+        // Date button
         OutlinedButton(onClick = { datePicker.show() }) {
             Text("Date: ${selectedDate.format(dateFormatter)}")
         }
 
-        // 时间选择 + 添加按钮
+        // Time selection add button
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -203,14 +189,14 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
             Button(
                 onClick = {
-                    // 只有当用户选了开始和结束时间时才添加
+                    // It is added only when the user selects the start and end times
                     if (startTime != "Select Start" && endTime != "Select End") {
-                        // 当用户点击“Add Slot”时，构造一个完整的 ISO 格式日期时间
+                        // When the user clicks "Add Slot", construct a complete ISO format date and time
                         val startDateTime = "${selectedDate.format(dateFormatter)} $startTime:00"
                         val endDateTime   = "${selectedDate.format(dateFormatter)} $endTime:00"
-                        // 如果需要，还可以加一个校验：开始时间必须早于结束时间
                         val dtStart = LocalDateTime.parse(startDateTime, slotFormatter)
                         val dtEnd   = LocalDateTime.parse(endDateTime,   slotFormatter)
+                        //The start time must be earlier than the end time
                         if (dtStart.isBefore(dtEnd)) {
                             slots += Slot(
                                 availabilityId = nextId++,
@@ -218,7 +204,6 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                                 endTime       = endDateTime,
                                 isBooked      = false
                             )
-                            // 重置按钮文字
                             startTime = "Select Start"
                             endTime   = "Select End"
                         } else {
@@ -234,21 +219,21 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
 
         Divider()
 
-        // --- All Slots 区块 ---
+        // --- All Slots block ---
         Text(
             "All Slots (${slots.size})",
             style = MaterialTheme.typography.titleMedium
         )
         Box(
             modifier = Modifier
-                .heightIn(max = 240.dp)     // 限定高度，可根据需求调整
+                .heightIn(max = 240.dp)
                 .fillMaxWidth()
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()               // 根据子项自动撑高
-                    .align(Alignment.TopStart),        // 可选：让列表内容靠上
+                    .wrapContentHeight()
+                    .align(Alignment.TopStart),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(
@@ -257,7 +242,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 ) { slot ->
                     SlotItem(
                         slot = slot,
-                        onDeleteRequest = { slotToDelete = slot }  // 只发起“删除请求”
+                        onDeleteRequest = { slotToDelete = slot }
                     )
                 }
             }
@@ -268,7 +253,6 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                     onDismissRequest = { slotToDelete = null },
                     title = { Text("Confirm deletion?") },
                     text  = {
-                        // 你也可以格式化成更友好的：日期 + 时间区间
                         Text("Are you sure you want to delete the time period of ${slot.startTime} - ${slot.endTime}?")
                     },
                     confirmButton = {
@@ -298,7 +282,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                         val availabilitySlots = slots.map { slot ->
                             AvailabilitySlot(
                                 availabilityId = slot.availabilityId,
-                                startTime = "${slot.startTime}:00",  // ISO 格式字符串
+                                startTime = "${slot.startTime}:00",  // ISO format
                                 endTime   = "${slot.endTime}:00"
                             )
                         }
@@ -324,13 +308,13 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
 //        }
         Divider()
-        // --- All Meetings 区块 ---
+        // --- All Meetings block ---
         Text("All Meetings (${meetings.size})", style = MaterialTheme.typography.titleMedium)
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 500.dp)   // 最大高度 240dp，内容少时自适应
+                .heightIn(max = 500.dp)
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -347,7 +331,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 }
             }
         }
-// Approve 确认框
+        // Approve confirmation box
         meetingToApprove?.let { m ->
             AlertDialog(
                 onDismissRequest = { meetingToApprove = null },
@@ -376,7 +360,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             )
         }
 
-        // Reject 确认框
+        // Reject confirmation box
         meetingToReject?.let { m ->
             AlertDialog(
                 onDismissRequest = { meetingToReject = null },
@@ -439,7 +423,7 @@ private fun SlotItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 只有 isBooked == false 时才给删除按钮留空间
+            // Space is only left for the delete button when isBooked == false
             if (!slot.isBooked) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(onClick = onDeleteRequest) {
@@ -481,7 +465,6 @@ fun MeetingItem(
 
             if (meeting.status == "Pending") {
                 Spacer(Modifier.height(8.dp))
-                // 用 Box + Row 右对齐
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                 ) {

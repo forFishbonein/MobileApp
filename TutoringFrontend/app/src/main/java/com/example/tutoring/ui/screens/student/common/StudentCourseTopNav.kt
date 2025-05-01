@@ -14,24 +14,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 
 /**
- * 顶部导航栏：两个 Tab，分别跳转到 tutor_courses 和 tutor_meeting
+ * Top navigation bar: Two tabs, which jump to tutor_courses and tutor_meeting respectively
  *
- * @param currentRoute 当前选中的路由名（"tutor_courses" 或 "tutor_meeting"）
- * @param onNavigate 点击时回调，传出目标路由
+ * @param currentRoute The currently selected route name ("tutor_courses" or "tutor_meeting")
+ * @param onNavigate When clicked, it is called back and the target route is sent out
  */
 @Composable
 fun StudentCourseTopNav(
     currentRoute: String,
     onNavigate: (String) -> Unit
 ) {
-    // 定义两个标签及对应路由
+    // Define two labels and the corresponding routes
     val tabs = remember {
         listOf(
             "Courses" to "student_courses",
             "Meetings" to "student_meeting"
         )
     }
-    // 当前选中索引
+    // Currently selected index
     val selectedIndex = tabs.indexOfFirst { it.second == currentRoute }.coerceAtLeast(0)
 
     TabRow(
