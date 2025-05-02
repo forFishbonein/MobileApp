@@ -1,5 +1,7 @@
 package com.example.tutoring.ui.navigation.student
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tutoring.data.Role
 import com.example.tutoring.utils.LoadingViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentMainScreen(

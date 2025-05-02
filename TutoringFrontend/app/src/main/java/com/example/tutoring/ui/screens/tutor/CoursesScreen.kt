@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -125,7 +126,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                 showAddDialog = true
                 handleType = "add"
            },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().testTag("addCourseButton")
         ) {
             Text("Add Course")
         }
@@ -133,7 +134,8 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
-                title = { Text(text = if (handleType == "add") "Add Course" else "Update Course") },
+                title = { Text(text = if (handleType == "add") "Add a Course " else "Update a Course") },
+                modifier = Modifier.testTag("addCourseDialog"),
                 text = {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -142,24 +144,25 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                             value = courseName,
                             onValueChange = { courseName = it },
                             label = { Text("Course Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().testTag("courseNameField")
                         )
                         OutlinedTextField(
                             value = courseDescription,
                             onValueChange = { courseDescription = it },
                             label = { Text("Description") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().testTag("courseDescField")
                         )
                         OutlinedTextField(
                             value = courseSubject,
                             onValueChange = { courseSubject = it },
                             label = { Text("Subject") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().testTag("courseSubjectField")
                         )
                     }
                 },
                 confirmButton = {
                     Button(
+                        modifier = Modifier.testTag("confirmButton"),
                         onClick = {
                             scope.launch {
                                 val requestBody = mapOf(
@@ -205,7 +208,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
         LazyColumn(
             state = lazyListState,
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().testTag("courseList")
         ) {
             items(courses.size) { index ->
                 val course = courses[index]

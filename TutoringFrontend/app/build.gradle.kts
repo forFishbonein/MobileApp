@@ -72,9 +72,10 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    // Compose UI 测试
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    // OkHttp + MockWebServer
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-
 }

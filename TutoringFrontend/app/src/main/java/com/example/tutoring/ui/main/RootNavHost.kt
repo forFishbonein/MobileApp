@@ -2,6 +2,8 @@ package com.example.tutoring.ui.main
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +31,7 @@ import com.example.tutoring.utils.getRoleFromLogin
 import com.example.tutoring.utils.logoutClear
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun RootNavHost(loadingViewModel: LoadingViewModel = viewModel()) {
