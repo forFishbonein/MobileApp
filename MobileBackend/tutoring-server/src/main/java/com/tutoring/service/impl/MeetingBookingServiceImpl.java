@@ -45,7 +45,6 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
         if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(1)))
             throw new CustomException(ErrorCode.BAD_REQUEST, "Slot is too close to current time.");
 
-        // 防重复
         boolean dup = lambdaQuery()
                 .eq(MeetingBooking::getStudentId, studentId)
                 .eq(MeetingBooking::getAvailabilityId, slot.getAvailabilityId())
@@ -65,7 +64,6 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
                 .build();
         save(booking);
 
-        // 锁定时段
         slot.setIsBooked(true);
         availabilitySvc.updateById(slot);
     }
@@ -81,7 +79,6 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
 
         b.setStatus(MeetingBooking.BookingStatus.Confirmed);
         updateById(b);
-        // TODO: send notification (comment)
     }
 
     @Override
@@ -96,13 +93,11 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
         b.setStatus(MeetingBooking.BookingStatus.Cancelled);
         updateById(b);
 
-        // 释放时段
         TutorAvailability slot = availabilitySvc.getById(b.getAvailabilityId());
         if (slot != null) {
             slot.setIsBooked(false);
             availabilitySvc.updateById(slot);
         }
-        // TODO: send notification (comment)
     }
 
     @Override
@@ -110,7 +105,6 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
 
         return lambdaQuery()
                 .eq(MeetingBooking::getTutorId, tutorId)
-//                .eq(MeetingBooking::getStatus, MeetingBooking.BookingStatus.Pending)
                 .orderByAsc(MeetingBooking::getCreatedAt)
                 .list()
                 .stream()
@@ -144,7 +138,6 @@ public class MeetingBookingServiceImpl extends ServiceImpl<MeetingBookingDao, Me
         List<MeetingBooking> list = list(qw);
         if (list.isEmpty()) return Collections.emptyList();
 
-        // 批量取 Tutor 和 Availability，避免 N+1
         Set<Long> tutorIds = list.stream()
                 .map(MeetingBooking::getTutorId)
                 .collect(Collectors.toSet());

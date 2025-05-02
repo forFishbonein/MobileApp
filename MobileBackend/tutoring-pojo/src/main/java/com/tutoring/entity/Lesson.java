@@ -24,21 +24,12 @@ public class Lesson implements Serializable {
     @TableField("title")
     private String title;
 
-    /**
-     * 课程的文字内容
-     */
     @TableField("content")
     private String content;
 
-    /**
-     * 多张图片的链接，多个链接以逗号分隔存储
-     */
     @TableField("image_urls")
     private String imageUrls;
 
-    /**
-     * 多个PDF文件的链接，多个链接以逗号分隔存储
-     */
     @TableField("pdf_urls")
     private String pdfUrls;
 

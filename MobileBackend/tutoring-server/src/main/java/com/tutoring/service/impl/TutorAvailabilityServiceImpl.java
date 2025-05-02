@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityDao, TutorAvailability>
         implements TutorAvailabilityService {
 
-    // 一次仅允许老师维护「未来 1 周」内的时段，可根据业务放宽
     private static final int RANGE_DAYS = 7;
 
     @Override
@@ -31,14 +30,12 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime limit = now.plusDays(RANGE_DAYS);
 
-        /* ---------- 1. 过滤并校验前端数据 ---------- */
         List<AvailabilitySlotDTO> valid = newSlots.stream()
                 .filter(s -> !s.getStartTime().isBefore(now) &&
                         !s.getEndTime().isAfter(limit) &&
                         s.getEndTime().isAfter(s.getStartTime()))
                 .collect(Collectors.toList());
 
-        /* ---------- 2. 查询数据库内已有时段 ---------- */
         List<TutorAvailability> existing = lambdaQuery()
                 .eq(TutorAvailability::getTutorId, tutorId)
                 .ge(TutorAvailability::getStartTime, now)
@@ -54,7 +51,6 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
                 .map(v -> v.getStartTime() + "_" + v.getEndTime())
                 .collect(Collectors.toSet());
 
-        /* ---------- 3. 需要新增的时段 ---------- */
         List<TutorAvailability> toInsert = valid.stream()
                 .filter(v -> !existMap.containsKey(v.getStartTime() + "_" + v.getEndTime()))
                 .map(v -> TutorAvailability.builder()
@@ -66,16 +62,13 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
                 .collect(Collectors.toList());
         if (!toInsert.isEmpty()) this.saveBatch(toInsert);
 
-        /* ---------- 4. 需要删除的时段 ---------- */
         List<Long> toDelete = existing.stream()
                 .filter(v -> !newKeys.contains(v.getStartTime() + "_" + v.getEndTime())
-                        && !Boolean.TRUE.equals(v.getIsBooked())) // 若已被预订则保留
+                        && !Boolean.TRUE.equals(v.getIsBooked()))
                 .map(TutorAvailability::getAvailabilityId)
                 .collect(Collectors.toList());
         if (!toDelete.isEmpty()) this.removeByIds(toDelete);
 
-//        log.info("Tutor[{}] availability updated: inserted {}, deleted {}", tutorId,
-//                toInsert.size(), toDelete.size());
     }
 
     @Override

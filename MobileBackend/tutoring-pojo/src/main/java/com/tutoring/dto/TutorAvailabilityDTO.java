@@ -12,6 +12,5 @@ import java.util.List;
 @Builder
 @ToString
 public class TutorAvailabilityDTO {
-    @NotEmpty(message = "可用时间段不能为空")
     private List<AvailabilitySlotDTO> availabilitySlots;
 }

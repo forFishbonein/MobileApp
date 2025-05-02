@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * 学生可预约的老师基础信息
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

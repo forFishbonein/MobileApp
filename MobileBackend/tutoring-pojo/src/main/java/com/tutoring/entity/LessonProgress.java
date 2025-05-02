@@ -34,9 +34,6 @@ public class LessonProgress implements Serializable {
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    /**
-     * 枚举对应数据库的 ENUM('not_started','in_progress','completed')
-     */
     public enum ProgressStatus {
         not_started, in_progress, completed
     }

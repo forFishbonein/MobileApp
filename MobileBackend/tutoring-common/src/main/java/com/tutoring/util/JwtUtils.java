@@ -10,9 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-/**
- * 基于 io.jsonwebtoken 0.9.1 的示例
- */
 @Component
 @Data
 public class JwtUtils {
@@ -28,7 +25,6 @@ public class JwtUtils {
         return buildToken(user.getUserId(), user.getRole().name(), expiration, "auth");
     }
 
-    /** 新增：短期 Reset Token */
     public String generateResetToken(User user, long ttlMillis) {
         return buildToken(user.getUserId(), null, ttlMillis, "reset");
     }

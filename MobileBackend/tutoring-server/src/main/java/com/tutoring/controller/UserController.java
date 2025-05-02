@@ -17,9 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
-/**
- * 用户相关接口：注册(两步) + 登录
- */
 @RestController
 @RequestMapping("/user")
 @Slf4j
@@ -28,9 +25,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    /**
-     * 第一步：只发送验证码，不包含密码和角色
-     */
     @PostMapping("/send-code")
     public RestResult<?> sendCode(@Valid @RequestBody SendCodeRequest request) {
         log.info("Send code request: {}", request);
@@ -39,10 +33,6 @@ public class UserController {
                 "Verification code has been sent to your email. Please enter it to complete registration.");
     }
 
-    /**
-     * 第二步：提交注册信息（含邮箱、验证码、密码、角色）
-     * 这里注册成功后，不返回用户对象
-     */
     @PostMapping("/register")
     public RestResult<?> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Register request: {}", request);
@@ -50,9 +40,6 @@ public class UserController {
         return RestResult.success(null, "Registration successful!");
     }
 
-    /**
-     * 登录接口
-     */
     @PostMapping("/login")
     public RestResult<LoginResponse> login(@Valid @RequestBody LoginRequest loginReq) {
         log.info("Login request: {}", loginReq);
@@ -61,9 +48,6 @@ public class UserController {
     }
 
 
-    /**
-     * 获取当前登录用户的信息
-     */
     @GetMapping("/me")
     public RestResult<UserProfileResponse> getMyProfile() {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -73,7 +57,6 @@ public class UserController {
 
         User user = userService.getUserProfile(currentUserId);
 
-        // 转换成前端需要的 UserProfileResponse
         UserProfileResponse resp = new UserProfileResponse();
         resp.setUserId(user.getUserId());
         resp.setEmail(user.getEmail());
@@ -89,9 +72,6 @@ public class UserController {
         return RestResult.success(resp, "Profile fetched successfully.");
     }
 
-    /**
-     * 更新个人信息
-     */
     @PutMapping("/me")
     public RestResult<?> updateMyProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -103,10 +83,6 @@ public class UserController {
         return RestResult.success(null, "Profile updated successfully.");
     }
 
-    /**
-     * 上传头像
-     * 注意：这是一个 multipart/form-data 格式的请求
-     */
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public RestResult<String> uploadAvatar(@RequestPart("file") MultipartFile file) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -114,24 +90,17 @@ public class UserController {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "User is not authenticated or session is invalid.");
         }
 
-        // 调用 Service 上传并更新数据库
         String avatarUrl = userService.uploadAvatar(currentUserId, file);
         return RestResult.success(avatarUrl, "Avatar uploaded successfully.");
     }
 
 
-    /**
-     * 第一步：忘记密码，发送短期 Reset JWT 到邮箱
-     */
     @PostMapping("/forgot-password")
     public RestResult<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
         userService.sendResetToken(req.getEmail());
         return RestResult.success(null, "Reset token has been sent to your email.");
     }
 
-    /**
-     * 第二步：在 App 内输入 Reset JWT + 新密码 来重置
-     */
     @PostMapping("/reset-password")
     public RestResult<?> resetPassword(@Valid @RequestBody ResetPasswordJwtRequest req) {
         userService.resetPasswordWithToken(req);

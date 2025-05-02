@@ -13,5 +13,5 @@ import javax.validation.constraints.NotNull;
 public class MeetingBookingRequestDTO {
     @NotNull private Long availabilityId;
     @NotBlank
-    private String  content;        // 想讨论的内容
+    private String  content;
 }

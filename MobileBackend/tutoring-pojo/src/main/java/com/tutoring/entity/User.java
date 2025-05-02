@@ -49,16 +49,10 @@ public class User implements Serializable {
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    /**
-     * 枚举对应数据库的 ENUM('student','tutor')
-     */
     public enum Role {
         student, tutor
     }
 
-    /**
-     * 枚举对应数据库的 ENUM('Pending','Active','Suspended')
-     */
     public enum AccountStatus {
         Pending, Active, Suspended
     }

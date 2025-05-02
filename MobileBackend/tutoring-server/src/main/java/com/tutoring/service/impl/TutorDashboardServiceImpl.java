@@ -30,7 +30,6 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
 
     @Override
     public TutorDashboardResponse getDashboardData(Long tutorId, Long courseId) {
-        // 1. 验证课程存在且归属
         Course course = courseDao.selectById(courseId);
         if (course == null) {
             throw new CustomException(ErrorCode.NOT_FOUND, "Course not found.");
@@ -40,7 +39,6 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                     "You are not the owner of this course.");
         }
 
-        // 2. 统计总课时（避免除零）
         int rawCount = lessonDao.selectCount(
                 new LambdaQueryWrapper<Lesson>()
                         .eq(Lesson::getCourseId, courseId)
@@ -48,7 +46,6 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
         final int totalLessons = rawCount == 0 ? 1 : rawCount;
 
 
-        // 3. 查已批准注册学生
         List<CourseRegistration> regs = regDao.selectList(
                 new LambdaQueryWrapper<CourseRegistration>()
                         .eq(CourseRegistration::getCourseId, courseId)
@@ -56,7 +53,6 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                                 CourseRegistration.RegistrationStatus.approved)
         );
 
-        // 无学生直接返回空结构
         if (regs.isEmpty()) {
             return TutorDashboardResponse.builder()
                     .courseId(courseId)
@@ -66,23 +62,19 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                     .build();
         }
 
-        // 4. 批量拉昵称
         List<Long> studentIds = regs.stream()
                 .map(CourseRegistration::getStudentId)
                 .collect(Collectors.toList());
-//        Map<Long,String> nickMap = userDao.selectBatchIds(studentIds).stream()
-//                .collect(Collectors.toMap(User::getUserId, User::getNickname));
         Map<Long, String> nickMap = userDao.selectBatchIds(studentIds).stream()
                 .collect(Collectors.toMap(
                         User::getUserId,
                         user -> {
                             String nick = user.getNickname();
-                            return nick != null ? nick : "Unknown";   // 避免 null
+                            return nick != null ? nick : "Unknown";
                         },
-                        (oldV, newV) -> oldV  // 如果 key 重复，保留第一个
+                        (oldV, newV) -> oldV
                 ));
 
-        // 5. 查询已完成课时数：按 student_id 分组，COUNT(*) AS completed
         QueryWrapper<LessonProgress> countWrapper = new QueryWrapper<>();
         countWrapper.select("student_id", "COUNT(*) AS completed")
                 .eq("course_id", courseId)
@@ -90,20 +82,15 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                 .groupBy("student_id");
 
         List<Map<String, Object>> rows = progressDao.selectMaps(countWrapper);
-//        Map<Long, Integer> doneMap = rows.stream().collect(Collectors.toMap(
-//                r -> ((Number) r.get("student_id")).longValue(),
-//                r -> ((Number) r.get("completed")).intValue()
-//        ));
         Map<Long,Integer> doneMap = rows.stream()
-                .filter(r -> r.get("completed") != null)      // 只留下有 completed 的行
+                .filter(r -> r.get("completed") != null)
                 .collect(Collectors.toMap(
                         r -> ((Number) r.get("student_id")).longValue(),
                         r -> ((Number) r.get("completed")).intValue(),
-                        (a, b) -> a   // 如果 key 再重复，也保留第一个
-        ));
+                        (a, b) -> a
+                ));
 
 
-        // 6. 构造并按完成度降序排序学生进度列表
         List<StudentProgressVO> students = studentIds.stream()
                 .map(sid -> {
                     int done = doneMap.getOrDefault(sid, 0);
@@ -114,7 +101,6 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
                             .progressPercent(pct)
                             .build();
                 })
-                // 用 comparingInt 消除泛型警告
                 .sorted(Comparator.comparingInt(StudentProgressVO::getProgressPercent).reversed())
                 .collect(Collectors.toList());
 
@@ -128,12 +114,10 @@ public class TutorDashboardServiceImpl implements TutorDashboardService {
 
     @Override
     public List<TutorDashboardResponse> getAllDashboardData(Long tutorId) {
-        // 查询该 tutor 的所有课程
         List<Course> courses = courseDao.selectList(
                 new LambdaQueryWrapper<Course>()
                         .eq(Course::getTutorId, tutorId)
         );
-        // 对每门课生成 Dashboard
         return courses.stream()
                 .map(c -> getDashboardData(tutorId, c.getCourseId()))
                 .collect(Collectors.toList());

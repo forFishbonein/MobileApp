@@ -28,12 +28,8 @@ public class LessonController {
     private LessonService lessonService;
 
     @Autowired
-    private CourseDao courseDao; // 用于验证课程归属
+    private CourseDao courseDao;
 
-    /**
-     * POST /lesson/create
-     * 导师创建 Lesson
-     */
     @PostMapping("/create")
     public RestResult<Lesson> createLesson(@Valid @RequestBody CreateLessonRequest request) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -47,10 +43,6 @@ public class LessonController {
         return RestResult.success(newLesson, "Lesson created successfully.");
     }
 
-    /**
-     * PUT /lesson/{lessonId}
-     * 导师更新 Lesson
-     */
     @PutMapping("/{lessonId}")
     public RestResult<Lesson> updateLesson(@PathVariable Long lessonId,
                                            @Valid @RequestBody UpdateLessonRequest request) {
@@ -65,7 +57,6 @@ public class LessonController {
         if (lesson == null) {
             throw new CustomException(ErrorCode.NOT_FOUND, "Lesson not found.");
         }
-        // 验证该 Lesson 是否属于当前 tutor 的课程
         Course course = courseDao.selectById(lesson.getCourseId());
         if (course == null || !course.getTutorId().equals(currentUserId)) {
             throw new CustomException(ErrorCode.FORBIDDEN, "You are not authorized to update this lesson.");
@@ -79,10 +70,6 @@ public class LessonController {
         return RestResult.success(lesson, "Lesson updated successfully.");
     }
 
-    /**
-     * GET /lesson/{lessonId}
-     * 获取指定 Lesson 详情
-     */
     @GetMapping("/{lessonId}")
     public RestResult<Lesson> getLesson(@PathVariable Long lessonId) {
         Lesson lesson = lessonService.getById(lessonId);
@@ -92,10 +79,6 @@ public class LessonController {
         return RestResult.success(lesson, "Lesson details retrieved successfully.");
     }
 
-    /**
-     * GET /lesson/course/{courseId}
-     * 查询指定 Course 下的所有 Lesson
-     */
     @GetMapping("/course/{courseId}")
     public RestResult<List<Lesson>> listLessons(@PathVariable Long courseId) {
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Lesson> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();

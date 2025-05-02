@@ -33,9 +33,6 @@ public class CourseRegistration implements Serializable {
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    /**
-     * 枚举对应数据库的 ENUM('pending','approved','rejected')
-     */
     public enum RegistrationStatus {
         pending, approved, rejected
     }

@@ -31,7 +31,6 @@ public class StudentMeetingServiceImpl implements StudentMeetingService {
 
     @Override
     public List<TutorBasicInfoVO> listBookableTutors(Long studentId) {
-        // 1. 查询所有该学生已批准的课程注册
         List<CourseRegistration> regs = regDao.selectList(
                 new LambdaQueryWrapper<CourseRegistration>()
                         .eq(CourseRegistration::getStudentId, studentId)
@@ -42,7 +41,6 @@ public class StudentMeetingServiceImpl implements StudentMeetingService {
             return Collections.emptyList();
         }
 
-        // 2. 根据 course_id 拉出对应的 tutor_id
         Set<Long> tutorIds = regs.stream()
                 .map(CourseRegistration::getCourseId)
                 .map(courseId -> {
@@ -60,13 +58,11 @@ public class StudentMeetingServiceImpl implements StudentMeetingService {
             return Collections.emptyList();
         }
 
-        // 3. 批量查询老师的用户信息
         List<User> tutors = userDao.selectBatchIds(new ArrayList<>(tutorIds));
         if (tutors.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 4. 过滤 role 为 tutor，构造 VO 返回
         return tutors.stream()
                 .filter(u -> u.getRole() == User.Role.tutor)
                 .map(u -> TutorBasicInfoVO.builder()

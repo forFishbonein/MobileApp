@@ -50,32 +50,24 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private TeacherEmailService teacherEmailService;
 
-    /**
-     * 内存Map：只保存【email -> 验证码】, 不需要存储密码/角色等。
-     */
     private final Map<String, String> emailCodeMap = new ConcurrentHashMap<>();
 
 
-    // 5 分钟 = 5 * 60 * 1000ms
     private static final long RESET_JWT_TTL = 5 * 60 * 1000;
 
     @Override
     @Transactional
     public void sendResetToken(String email) {
-        // 查出用户且只能 Active 状态才能重置
         User user = this.lambdaQuery()
                 .select(User::getUserId, User::getEmail, User::getAccountStatus)
                 .eq(User::getEmail, email)
                 .one();
         if (user == null || user.getAccountStatus() != User.AccountStatus.Active) {
-            // 不暴露用户是否存在，直接返回成功即可
             return;
         }
 
-        // 生成一个短期 JWT
         String jwt = jwtUtils.generateResetToken(user, RESET_JWT_TTL);
 
-        // 发送邮件，邮件里只放令牌，告知用户复制到 App
         String subject = "Your Password Reset Token";
         String text = String.format(
                 "You requested to reset your password. Please copy the following token into the app within 5 minutes:\n\n%s",
@@ -90,83 +82,64 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Transactional
     public void resetPasswordWithToken(ResetPasswordJwtRequest req) {
         String token = req.getToken();
-        // 验证签名和过期
         if (!jwtUtils.validateToken(token)) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid or expired reset token.");
         }
         Claims claims = jwtUtils.getClaims(token);
-        // 校验用途
         String purpose = claims.get("purpose", String.class);
         if (!"reset".equals(purpose)) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid reset token.");
         }
         Long userId = Long.parseLong(claims.getSubject());
 
-        // 查用户并检查状态
         User user = this.getById(userId);
         if (user == null || user.getAccountStatus() != User.AccountStatus.Active) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "User not found or not eligible for reset.");
         }
 
-        // 更新密码
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         this.updateById(user);
 
         log.info("Password reset for userId={}", userId);
     }
 
-    /**
-     * 第一步：发送验证码
-     */
     @Override
     public void sendEmailCode(String email) {
-        // 1. 检查邮箱是否已注册 (注意：查询可用 LambdaQueryWrapper, 语义更清晰)
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getEmail, email);
         User existing = this.getOne(queryWrapper);
 
         if (existing != null) {
-            // 举例使用 BAD_REQUEST：具体可根据你的 ErrorCode 枚举定义来改
             throw new CustomException(ErrorCode.BAD_REQUEST, "Email is already registered.");
         }
 
-        // 2. 生成随机验证码
         String code = generateRandomCode();
 
-        // 3. 缓存： email -> code
         emailCodeMap.put(email, code);
 
-        // 4. 发邮件
         mailService.sendVerificationCode(email, code);
 
         log.info("Verification code sent, email={}, code={}", email, code);
     }
 
-    /**
-     * 第二步：验证验证码 + 注册用户
-     */
     @Override
     public User registerWithCode(RegisterRequest request) {
         String email = request.getEmail();
         String inputCode = request.getCode();
 
-        // 1. 从Map中取出验证码
         String storedCode = emailCodeMap.get(email);
         if (storedCode == null) {
             throw new CustomException(ErrorCode.BAD_REQUEST,
                     "Verification code expired or not found. Please get a new code.");
         }
-        // 2. 对比
         if (!storedCode.equals(inputCode)) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid verification code. Please try again.");
         }
 
-        // 3. 验证角色
         if (!("student".equalsIgnoreCase(request.getRole()) || "tutor".equalsIgnoreCase(request.getRole()))) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "Invalid role, must be 'student' or 'tutor'.");
         }
 
-        // 3.5 如果角色是 tutor，则验证该邮箱是否在教师邮箱表中存在
         if ("tutor".equalsIgnoreCase(request.getRole())) {
             TeacherEmail teacherEmail = teacherEmailService.getById(email);
             if (teacherEmail == null) {
@@ -174,7 +147,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             }
         }
 
-        // 4. 正式注册：插入数据库
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -184,43 +156,31 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         this.save(newUser);
 
-        // 5. 注册成功后移除验证码记录
         emailCodeMap.remove(email);
 
         return newUser;
     }
 
-    /**
-     * 登录
-     */
     @Override
     public LoginResponse login(LoginRequest loginReq) {
-        // 1. 先根据 email 查用户
         User user = this.lambdaQuery()
                 .eq(User::getEmail, loginReq.getEmail())
                 .one();
 
         if (user == null) {
-            // 未查询到用户，返回 401
             throw new CustomException(ErrorCode.UNAUTHORIZED, "Incorrect email or password.");
         }
 
-        // 2. 校验密码
         if (!passwordEncoder.matches(loginReq.getPassword(), user.getPasswordHash())) {
-            // 密码错误，返回 401
             throw new CustomException(ErrorCode.UNAUTHORIZED, "Incorrect email or password.");
         }
 
-        // 3. 检查账号状态
         if (user.getAccountStatus() == User.AccountStatus.Suspended) {
-            // 帐号被封禁，403
             throw new CustomException(ErrorCode.FORBIDDEN, "Your account is suspended.");
         }
 
-        // 4. 生成JWT
         String token = jwtUtils.generateToken(user);
 
-        // 5. 返回响应
         LoginResponse resp = new LoginResponse();
         resp.setToken(token);
         resp.setUserId(user.getUserId());
@@ -228,15 +188,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return resp;
     }
 
-    // 简易生成六位随机数字验证码
     private String generateRandomCode() {
         int r = (int) ((Math.random() * 9 + 1) * 100000);
         return String.valueOf(r);
     }
 
-    // ==================================
-    // 4. 获取用户信息
-    // ==================================
     @Override
     public User getUserProfile(Long userId) {
         User user = this.getById(userId);
@@ -246,9 +202,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return user;
     }
 
-    // ==================================
-    // 5. 更新用户信息
-    // ==================================
     @Override
     public void updateUserProfile(Long userId, UpdateUserProfileRequest request) {
         User user = this.getById(userId);
@@ -258,30 +211,22 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         user.setNickname(request.getNickname());
         user.setBio(request.getBio());
-        // 如果允许更新AvatarUrl也可以设置 user.setAvatarUrl(request.getAvatarUrl());
 
         this.updateById(user);
     }
 
-    // ==================================
-    // 6. 上传头像
-    // ==================================
     @Override
     public String uploadAvatar(Long userId, MultipartFile file) {
-        // (1) 查用户
         User user = this.getById(userId);
         if (user == null) {
             throw new CustomException(ErrorCode.NOT_FOUND, "User not found.");
         }
 
-        // (2) 执行上传到OSS (使用OssService)
         String avatarUrl = ossService.uploadFile(file);
 
-        // (3) 更新用户的avatar
         user.setAvatarUrl(avatarUrl);
         this.updateById(user);
 
-        // (4) 返回URL给前端
         return avatarUrl;
     }
 }

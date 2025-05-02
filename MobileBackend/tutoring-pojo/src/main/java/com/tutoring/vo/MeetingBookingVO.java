@@ -16,10 +16,10 @@ public class MeetingBookingVO {
     private Long tutorId;
     private String tutorNickname;
 
-    private String content;                               // 学生填写的说明
+    private String content;
     private MeetingBooking.BookingStatus status;
 
-    private LocalDateTime startTime;                      // 对应 TutorAvailability
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
 
     private LocalDateTime createdAt;

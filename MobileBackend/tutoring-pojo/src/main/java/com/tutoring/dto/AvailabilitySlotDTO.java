@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @ToString
 public class AvailabilitySlotDTO {
 
-    /** 前端回传已有时段时带上 ID；新增时可为空 */
     private Long availabilityId;
 
     @NotNull

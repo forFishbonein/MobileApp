@@ -14,7 +14,7 @@ public class CourseListResponse {
     private String courseName;
     private String description;
     private String subject;
-    private String teacherName;  // 教师昵称
+    private String teacherName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

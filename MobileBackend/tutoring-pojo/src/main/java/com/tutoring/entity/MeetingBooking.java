@@ -21,12 +21,11 @@ public class MeetingBooking implements Serializable {
     @TableField("student_id")
     private Long studentId;
 
-    /** 新增：学生填写的会议请求内容 */
     @TableField("request_content")
     private String requestContent;
 
     @TableField("tutor_id")
-    private Long tutorId;           // ★ 新增
+    private Long tutorId;
 
     @TableField("status")
     private BookingStatus status;

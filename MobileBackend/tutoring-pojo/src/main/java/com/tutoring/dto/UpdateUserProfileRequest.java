@@ -10,7 +10,4 @@ public class UpdateUserProfileRequest {
 
     private String bio;
 
-    // 如果你想直接在更新接口里覆盖 avatarUrl（不通过上传接口）
-    // 也可以保留这个字段：
-//     private String avatarUrl;
 }

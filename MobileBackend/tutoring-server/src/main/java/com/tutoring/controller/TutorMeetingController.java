@@ -24,7 +24,6 @@ public class TutorMeetingController {
     @Autowired private TutorAvailabilityService availabilitySvc;
     @Autowired private MeetingBookingService bookingSvc;
 
-    /** Tutor list all future slots (booked & free) */
     @GetMapping("/availability")
     public RestResult<?> mySlots() {
         Long tutorId = SecurityUtils.getCurrentUserId();
@@ -35,7 +34,6 @@ public class TutorMeetingController {
                 "Slots retrieved.");
     }
 
-    /** Tutor batch maintain slots */
     @PostMapping("/availability")
     public RestResult<?> saveSlots(@Valid @RequestBody TutorAvailabilityDTO dto) {
         availabilitySvc.updateAvailability(
@@ -43,8 +41,6 @@ public class TutorMeetingController {
         return RestResult.success(null, "Slots updated.");
     }
 
-    /** Tutor list pending bookings */
-    // 查看所有！
     @GetMapping("/requests/pending")
     public RestResult<?> pending() {
         return RestResult.success(
@@ -52,7 +48,6 @@ public class TutorMeetingController {
                 "Pending bookings retrieved.");
     }
 
-    /** Tutor approve */
     @PutMapping("/requests/{id}/approve")
     public RestResult<?> approve(@PathVariable Long id,
                                  @RequestBody(required=false) String comment) {
@@ -60,7 +55,6 @@ public class TutorMeetingController {
         return RestResult.success(null, "Booking approved.");
     }
 
-    /** Tutor reject */
     @PutMapping("/requests/{id}/reject")
     public RestResult<?> reject(@PathVariable Long id,
                                 @RequestBody(required=false) String comment) {

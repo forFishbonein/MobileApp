@@ -18,18 +18,12 @@ public class OssController {
     @Autowired
     private OssService ossService;
 
-    /**
-     * 上传图片接口：接收 MultipartFile 后调用 OSS 服务上传图片
-     */
     @PostMapping("/uploadImage")
     public RestResult<String> uploadImage(@RequestPart("file") MultipartFile file) {
         String fileUrl = ossService.uploadFile(file);
         return RestResult.success(fileUrl, "Image uploaded successfully.");
     }
 
-    /**
-     * 上传PDF接口：接收 MultipartFile 后调用 OSS 服务上传PDF文件
-     */
     @PostMapping("/uploadPdf")
     public RestResult<String> uploadPdf(@RequestPart("file") MultipartFile file) {
         String fileUrl = ossService.uploadFile(file);

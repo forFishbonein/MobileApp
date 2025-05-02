@@ -23,10 +23,6 @@ public class TutorDashboardController {
 
     @Autowired private TutorDashboardService dashboardSvc;
 
-    /**
-     * GET /tutor/dashboard
-     * GET /tutor/dashboard?courseId=123
-     */
     @GetMapping
     public RestResult<?> dashboard(@RequestParam(required = false) Long courseId) {
         Long tutorId = SecurityUtils.getCurrentUserId();
@@ -36,12 +32,10 @@ public class TutorDashboardController {
         }
 
         if (courseId != null) {
-            // 单课程
             TutorDashboardResponse vo =
                     dashboardSvc.getDashboardData(tutorId, courseId);
             return RestResult.success(vo, "Dashboard data retrieved.");
         } else {
-            // 全部课程
             List<TutorDashboardResponse> all =
                     dashboardSvc.getAllDashboardData(tutorId);
             return RestResult.success(all, "Dashboard data for all courses retrieved.");

@@ -1,7 +1,6 @@
 server:
   port: 8080
 
-# 连本地mysql
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -9,7 +8,6 @@ spring:
     url: jdbc:mysql://8.130.52.237:3306/tutoring_database?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     username: tutoring
     password: RYkaZCwsBKcxpJ6Y
-  #临时解决方案
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -17,8 +15,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: wxinran543@gmail.com      # 替换为你的 Gmail 邮箱地址
-    password: dlgyysvqolbcljep          # 替换为你的 Gmail 应用专用密码
+    username: wxinran543@gmail.com
+    password: dlgyysvqolbcljep
     properties:
       mail:
         smtp:
@@ -27,7 +25,7 @@ spring:
             enable: true
           debug: true
 
-# 阿里云OSS的相关配置
+
 ali-oss:
   endpoint: oss-cn-hangzhou.aliyuncs.com
   access-key-id: LTAI5tRM3FjZEZjXbNoTAUEu
@@ -51,46 +49,3 @@ knife4j:
 google:
   clientId: "642557482063-q866pb3tlp0blvso126q2i2si40qn6oh.apps.googleusercontent.com"
 
-
-  #  datasource:
-#    type: com.alibaba.druid.pool.DruidDataSource
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://localhost:3306/tutoring_database?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-#    username: root
-#    password: Aa1401545387
-#  redis:
-#    host:localhost
-#    port:6379
-
-# 连docker
-#spring:
-#  datasource:
-#    type: com.alibaba.druid.pool.DruidDataSource
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://mysql:3306/webCloud?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-#    username: root
-#    password: Aa1401545387
-
-#server:
-#  port: 8080
-#
-#spring:
-#  profiles:
-#    active: dev
-#  main:
-#    allow-circular-references: true
-#  datasource:
-#    druid:
-#      driver-class-name: ${sky.datasource.driver-class-name}
-#      url: jdbc:mysql://${sky.datasource.host}:${sky.datasource.port}/${sky.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-#      username: ${sky.datasource.username}
-#      password: ${sky.datasource.password}
-
-#sky:
-#  jwt:
-#    # 设置jwt签名加密时使用的秘钥
-#    admin-secret-key: itcast
-#    # 设置jwt过期时间
-#    admin-ttl: 7200000
-#    # 设置前端传递过来的令牌名称
-#    admin-token-name: token

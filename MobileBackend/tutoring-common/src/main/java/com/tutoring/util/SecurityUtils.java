@@ -33,9 +33,6 @@ public final class SecurityUtils {
         return null;
     }
 
-    /**
-     * 获取当前登录用户角色
-     */
     public static User.Role getCurrentUserRole() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -49,9 +46,6 @@ public final class SecurityUtils {
         return null;
     }
 
-    /**
-     * 获取当前登录的 User 对象
-     */
     public static User getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

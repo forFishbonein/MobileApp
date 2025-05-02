@@ -12,13 +12,8 @@ import java.time.LocalDateTime;
 @Slf4j
 public class MyMetaObjecthandler implements MetaObjectHandler {
 
-    /**
-     * 插入操作，自动填充
-     * @param metaObject
-     */
     @Override
     public void insertFill(MetaObject metaObject) {
-        log.info("公共字段自动填充[insert]...");
         log.info(metaObject.toString());
         if (metaObject.hasSetter("createdAt")) {
             metaObject.setValue("createdAt", LocalDateTime.now());
@@ -44,13 +39,8 @@ public class MyMetaObjecthandler implements MetaObjectHandler {
         }
     }
 
-    /**
-     * 更新操作，自动填充
-     * @param metaObject
-     */
     @Override
     public void updateFill(MetaObject metaObject) {
-        log.info("公共字段自动填充[update]...");
         log.info(metaObject.toString());
 
         if (metaObject.hasSetter("updatedAt")) {

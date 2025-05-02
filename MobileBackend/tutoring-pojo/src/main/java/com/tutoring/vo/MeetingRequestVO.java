@@ -6,9 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import com.tutoring.entity.MeetingBooking;
 
-/**
- * 登录成功后返回
- */
 @Data
 @Builder
 public class MeetingRequestVO {

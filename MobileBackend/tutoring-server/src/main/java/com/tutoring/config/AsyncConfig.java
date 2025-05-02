@@ -15,7 +15,6 @@ import java.util.concurrent.Executor;
 @Slf4j
 public class AsyncConfig implements AsyncConfigurer {
 
-    // 配置异步线程池
     @Bean("mailAsyncExecutor")
     public Executor mailAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -29,15 +28,12 @@ public class AsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {
-        // 返回默认的异步线程池，如果没有特别指定可用同一个
         return mailAsyncExecutor();
     }
 
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-        // 捕获异步方法中未处理的异常
         return (throwable, method, params) -> {
-            // 记录日志或者通知运维团队
             log.error("Async error in method: " + method.getName(), throwable);
         };
     }

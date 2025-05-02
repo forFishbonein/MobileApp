@@ -27,13 +27,13 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         implements CourseRegistrationService {
 
     @Autowired
-    private LessonService lessonService; // 用于查询课程下所有 Lesson
+    private LessonService lessonService;
 
     @Autowired
-    private LessonProgressDao lessonProgressDao; // 用于查询学生在 Lesson 上的进度
+    private LessonProgressDao lessonProgressDao;
 
     @Autowired
-    private CourseDao courseDao; // 用于验证课程归属（审批时需确保当前导师拥有该课程）
+    private CourseDao courseDao;
 
     @Autowired
     private UserDao userDao;
@@ -49,12 +49,8 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         log.info("Student {} registered for course {}", studentId, courseId);
     }
 
-    /**
-     * 新方法：返回带学生昵称的注册请求详情
-     */
     @Override
     public List<RegistrationResponseDTO> findRegistrationsByTutorWithUserInfo(Long tutorId) {
-        // 1. 查询当前导师名下所有 CourseRegistration 记录
         List<Course> tutorCourses = getCoursesByTutor(tutorId);
         if (tutorCourses.isEmpty()) {
             return Collections.emptyList();
@@ -65,19 +61,17 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
 
         QueryWrapper<CourseRegistration> regQuery = new QueryWrapper<>();
         regQuery.in("course_id", courseIds)
-                .orderByDesc("created_at");  // 按创建时间降序排列
+                .orderByDesc("created_at");
 
         List<CourseRegistration> registrations = this.baseMapper.selectList(regQuery);
         if (registrations.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 2. 收集 studentId
         Set<Long> studentIds = registrations.stream()
                 .map(CourseRegistration::getStudentId)
                 .collect(Collectors.toSet());
 
-        // 3. 一次查询对应的用户信息，建立映射
         if (studentIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -88,7 +82,6 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         Map<Long, String> userIdToNickname = userList.stream()
                 .collect(Collectors.toMap(User::getUserId, user -> user.getNickname() != null ? user.getNickname() : ""));
 
-        // 4. 拼装 RegistrationResponseDTO
         return registrations.stream().map(reg -> {
             return RegistrationResponseDTO.builder()
                     .registrationId(reg.getRegistrationId())
@@ -102,9 +95,6 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
         }).collect(Collectors.toList());
     }
 
-    /**
-     * 可提取一个私有方法，专门根据 tutorId 查出该导师的所有课程
-     */
     private List<Course> getCoursesByTutor(Long tutorId) {
         QueryWrapper<Course> courseQuery = new QueryWrapper<>();
         courseQuery.eq("tutor_id", tutorId);
@@ -113,17 +103,14 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
 
     @Override
     public void updateRegistrationStatus(Long registrationId, String decision, Long tutorId) {
-        // 先获取注册记录
         CourseRegistration registration = this.baseMapper.selectById(registrationId);
         if (registration == null) {
             throw new CustomException(ErrorCode.NOT_FOUND, "Registration record not found.");
         }
-        // 验证该注册请求所属课程是否属于当前 tutor
         Course course = courseDao.selectById(registration.getCourseId());
         if (course == null || !course.getTutorId().equals(tutorId)) {
             throw new CustomException(ErrorCode.FORBIDDEN, "You are not authorized to update this registration.");
         }
-        // 根据 decision 更新状态
         if ("approved".equalsIgnoreCase(decision)) {
             registration.setStatus(CourseRegistration.RegistrationStatus.approved);
         } else if ("rejected".equalsIgnoreCase(decision)) {
@@ -137,7 +124,6 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
 
     @Override
     public CourseProgressResponse getCourseProgress(Long studentId, Long courseId) {
-        // 查询该课程下所有 Lesson
         QueryWrapper<Lesson> lessonQuery = new QueryWrapper<>();
         lessonQuery.eq("course_id", courseId);
         List<Lesson> lessons = lessonService.list(lessonQuery);
@@ -169,7 +155,7 @@ public class CourseRegistrationServiceImpl extends ServiceImpl<CourseRegistratio
     public List<CourseRegistration> findRegistrationsByStudent(Long studentId) {
         QueryWrapper<CourseRegistration> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("student_id", studentId)
-                .orderByDesc("created_at");  // 按创建时间降序排列
+                .orderByDesc("created_at");
         return this.baseMapper.selectList(queryWrapper);
     }
 }

@@ -25,10 +25,6 @@ public class CourseRegistrationController {
     @Autowired
     private CourseRegistrationService courseRegistrationService;
 
-    /**
-     * GET /course/registrations
-     * 导师查看所有注册请求
-     */
     @GetMapping
     public RestResult<List<RegistrationResponseDTO>> listAllRegistrations() {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -39,15 +35,10 @@ public class CourseRegistrationController {
             throw new CustomException(ErrorCode.FORBIDDEN, "Only tutors can view registration requests.");
         }
 
-        // 调用 Service 获取包含申请者昵称的信息
         List<RegistrationResponseDTO> responseDTOList = courseRegistrationService.findRegistrationsByTutorWithUserInfo(currentUserId);
         return RestResult.success(responseDTOList, "Registrations retrieved successfully.");
     }
 
-    /**
-     * PUT /course/registrations/{registrationId}
-     * 导师审批注册请求
-     */
     @PutMapping("/{registrationId}")
     public RestResult<?> updateRegistration(@PathVariable Long registrationId,
                                             @Valid @RequestBody RegistrationApprovalRequest request) {
@@ -62,10 +53,6 @@ public class CourseRegistrationController {
         return RestResult.success(null, "Registration request updated successfully.");
     }
 
-    /**
-     * GET /course/registrations/student
-     * 学生查看自己所有的订单
-     */
     @GetMapping("/student")
     public RestResult<List<CourseRegistration>> listStudentRegistrations() {
         Long currentUserId = SecurityUtils.getCurrentUserId();

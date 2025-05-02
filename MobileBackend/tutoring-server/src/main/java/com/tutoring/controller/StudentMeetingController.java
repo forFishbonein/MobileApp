@@ -30,7 +30,6 @@ public class StudentMeetingController {
     @Autowired
     private StudentMeetingService studentMeetingService;
 
-    /** Student query tutor free slots */
     @GetMapping("/tutor/{tutorId}/free-slots")
     public RestResult<?> freeSlots(@PathVariable Long tutorId) {
         return RestResult.success(
@@ -38,19 +37,12 @@ public class StudentMeetingController {
                 "Free slots retrieved.");
     }
 
-    /** Student create booking */
     @PostMapping("/book")
     public RestResult<?> book(@Valid @RequestBody MeetingBookingRequestDTO dto) {
         bookingSvc.createBooking(dto, SecurityUtils.getCurrentUserId());
         return RestResult.success(null, "Booking request submitted.");
     }
 
-    /* ---------- 新增：学生查询自己的全部订单 ---------- */
-
-    /**
-     * GET /student/meeting/bookings
-     * 可选参数 ?status=Pending|Confirmed|Cancelled|Expired
-     */
     @GetMapping("/bookings")
     public RestResult<?> myBookings(@RequestParam(required = false) String status) {
 
@@ -72,10 +64,6 @@ public class StudentMeetingController {
                 "Bookings retrieved.");
     }
 
-    /**
-     * GET /student/meeting/tutors
-     * 列出当前登录学生可预约的所有老师
-     */
     @GetMapping("/tutors")
     public RestResult<List<TutorBasicInfoVO>> listBookableTutors() {
         Long studentId = SecurityUtils.getCurrentUserId();

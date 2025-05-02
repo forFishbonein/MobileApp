@@ -33,10 +33,6 @@ public class CourseController {
     @Autowired
     private CourseRegistrationService courseRegistrationService;
 
-    /**
-     * GET /course/list
-     * 列表查询课程，可通过 name 和 subject 筛选，并返回包含教师名字的自定义响应对象
-     */
     @GetMapping("/list")
     public RestResult<List<CourseListResponse>> listCourses(@RequestParam(required = false) String name,
                                                             @RequestParam(required = false) String subject) {
@@ -44,10 +40,6 @@ public class CourseController {
         return RestResult.success(courses, "Courses retrieved successfully.");
     }
 
-    /**
-     * POST /course/register
-     * 学生请求加入课程
-     */
     @PostMapping("/register")
     public RestResult<?> registerCourse(@Valid @RequestBody CourseRegisterRequest request) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -61,10 +53,6 @@ public class CourseController {
         return RestResult.success(null, "Course registration request submitted.");
     }
 
-    /**
-     * GET /course/{courseId}/progress
-     * 学生查看指定 Course 下的学习进度
-     */
     @GetMapping("/{courseId}/progress")
     public RestResult<CourseProgressResponse> getCourseProgress(@PathVariable Long courseId) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -78,10 +66,6 @@ public class CourseController {
         return RestResult.success(progress, "Course progress retrieved successfully.");
     }
 
-    /**
-     * POST /course/create
-     * 导师创建课程
-     */
     @PostMapping("/create")
     public RestResult<CourseDetailResponse> createCourse(@Valid @RequestBody CreateCourseRequest request) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -96,10 +80,6 @@ public class CourseController {
         return RestResult.success(response, "Course created successfully.");
     }
 
-    /**
-     * GET /course/{courseId}
-     * 获取课程详情
-     */
     @GetMapping("/{courseId}")
     public RestResult<CourseDetailResponse> getCourseDetail(@PathVariable Long courseId) {
         Course course = courseService.getById(courseId);
@@ -110,10 +90,6 @@ public class CourseController {
         return RestResult.success(response, "Course details retrieved successfully.");
     }
 
-    /**
-     * PUT /course/{courseId}
-     * 导师更新课程信息
-     */
     @PutMapping("/{courseId}")
     public RestResult<CourseDetailResponse> updateCourse(@PathVariable Long courseId,
                                                          @Valid @RequestBody UpdateCourseRequest request) {
@@ -128,7 +104,6 @@ public class CourseController {
         if (!course.getTutorId().equals(currentUserId)) {
             throw new CustomException(ErrorCode.FORBIDDEN, "You are not authorized to update this course.");
         }
-        // 更新课程信息
         course.setCourseName(request.getName());
         course.setDescription(request.getDescription());
         course.setSubject(request.getSubject());
@@ -137,10 +112,6 @@ public class CourseController {
         return RestResult.success(response, "Course updated successfully.");
     }
 
-    /**
-     * DELETE /course/{courseId}
-     * 导师删除课程
-     */
     @DeleteMapping("/{courseId}")
     public RestResult<?> deleteCourse(@PathVariable Long courseId) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -158,10 +129,6 @@ public class CourseController {
         return RestResult.success(null, "Course deleted successfully.");
     }
 
-    /**
-     * GET /course/tutor/list
-     * 导师查询自己所教的所有课程，返回优化后的格式（不包含教师名字）
-     */
     @GetMapping("/tutor/list")
     public RestResult<List<TutorCourseResponse>> listTutorCourses() {
         Long currentUserId = SecurityUtils.getCurrentUserId();
@@ -175,9 +142,6 @@ public class CourseController {
         return RestResult.success(courses, "Tutor courses retrieved successfully.");
     }
 
-    /**
-     * Helper method: 将 Course 实体转换为 CourseDetailResponse
-     */
     private CourseDetailResponse convertToDetailResponse(Course course) {
         CourseDetailResponse response = new CourseDetailResponse();
         response.setCourseId(course.getCourseId());
