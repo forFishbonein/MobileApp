@@ -1,0 +1,16 @@
+services:
+  tutoring-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tutoring-backend:latest
+    #  8085 -> container 8080（
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
