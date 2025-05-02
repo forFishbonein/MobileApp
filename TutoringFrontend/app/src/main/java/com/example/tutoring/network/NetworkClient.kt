@@ -19,7 +19,8 @@ object NetworkClient {
     //    private const val BASE_URL = "http://localhost:8080"
     //    private const val BASE_URL = "http://10.0.2.2:8080" // The emulator needs to be mapped to localhost using 10.0.2.2
     // ① Change the BASE_URL to variable
-    private var baseUrl: String = "http://10.0.2.2:8080"
+//    private var baseUrl: String = "http://10.0.2.2:8080"
+    private var baseUrl: String = "http://8.208.16.103:8085"
 
     // ② Expose a method externally to override the URL in the test
     fun overrideBaseUrl(newUrl: String) {
