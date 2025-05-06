@@ -7,7 +7,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://8.208.16.103:3306/tutoring_database?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     username: tutoring
-    password: RYkaZCwsBKcxpJ6Y
+    password: wNmxf3P4r3YaAMDm
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
