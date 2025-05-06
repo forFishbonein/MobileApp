@@ -30,13 +30,13 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .version("2.0")
                 .description("tutoringSystem API Document")
                 .build();
-        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+
+        return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.tutoring.controller"))
                 .paths(PathSelectors.any())
                 .build();
-        return docket;
     }
 
     @Bean
@@ -47,23 +47,27 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
 
+    @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+        registry.addResourceHandler("/doc.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
     @Override
     protected void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        log.info("扩展消息转换器...");
-        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
+        log.info("extendMessageConverters...");
+        MappingJackson2HttpMessageConverter messageConverter =
+                new MappingJackson2HttpMessageConverter();
         messageConverter.setObjectMapper(new JacksonObjectMapper());
-        converters.add(0,messageConverter);
+        converters.add(0, messageConverter);
     }
 }
 
