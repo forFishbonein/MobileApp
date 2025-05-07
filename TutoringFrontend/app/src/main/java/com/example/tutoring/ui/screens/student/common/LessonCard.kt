@@ -72,7 +72,7 @@ fun LessonCard(
                     ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                if (lesson.imageUrls.isNotEmpty()) {
+                if (!lesson.imageUrls.isNullOrEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant Images:", style = MaterialTheme.typography.bodyMedium)
                         // Loop through the imageUrls and display the image using Coil AsyncImage
@@ -87,7 +87,7 @@ fun LessonCard(
                         }
                     }
                 }
-                if (lesson.pdfUrls.isNotEmpty()) {
+                if (!lesson.pdfUrls.isNullOrEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Relevant PDFs:", style = MaterialTheme.typography.bodyMedium)
                         lesson.pdfUrls.split(",").forEachIndexed { index, url ->

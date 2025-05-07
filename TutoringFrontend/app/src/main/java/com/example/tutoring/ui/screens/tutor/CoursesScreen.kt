@@ -81,7 +81,10 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
         }
     }
     fun loadCourses() {
-        if (isLoading) return
+//        if (isLoading) return
+        // If it is loading or there are no more pages left, return directly
+        val startIndex = (page - 1) * pageSize
+        if (isLoading || startIndex >= allCourses.size) return
         isLoading = true
         scope.launch {
             delay(1000)
