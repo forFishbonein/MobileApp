@@ -100,7 +100,9 @@ fun CoursesScreen(navController: NavHostController, onCoursesLoaded: (tutorIds: 
         }
     }
     fun loadCourses() {
-        if (isLoading) return
+//        if (isLoading) return
+        val startIndex = (page - 1) * pageSize
+        if (isLoading || startIndex >= allCourses.size) return
         isLoading = true
 
         scope.launch {

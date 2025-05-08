@@ -61,20 +61,38 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
                 // Find the corresponding course content according to the courseId
                 val response = apiService.listLessons(courseId)
 //                lessons = response.data as List<Lesson>
-                val response2 = apiService.getLessonProgressByCourseAndStudent(courseId,userId)
+                val response2 = apiService.getLessonProgressByCourseAndStudent(courseId, userId)
                 // Get the progress list
                 val progressList = response2.data as List<LessonsProcess>
                 // Match each lesson in the lessons to the progressList and update the completed field
                 lessons = (response.data as List<Lesson>).map { lesson ->
-                    // Check whether there is a corresponding progress record and certain conditions are met (for example, status == "completed")
+//                    // Check whether there is a corresponding progress record and certain conditions are met (for example, status == "completed")
+//                    val matchingProgress = progressList.find { progress ->
+//                        progress.lessonId == lesson.lessonId && progress.status == "completed"
+//                    }
+//                    // If a record is found, the lesson is complete, otherwise it is not
+//                    lesson.copy(completed = matchingProgress != null)
+                    // Find the matching progress
                     val matchingProgress = progressList.find { progress ->
                         progress.lessonId == lesson.lessonId && progress.status == "completed"
                     }
-                    // If a record is found, the lesson is complete, otherwise it is not
-                    lesson.copy(completed = matchingProgress != null)
+                    // First, turn the fields that might be deserialized as null into empty strings
+                    val safeImageUrls = (lesson.imageUrls as String?) ?: ""
+                    val safePdfUrls   = (lesson.pdfUrls   as String?) ?: ""
+                    // Assign values to all fields at once again via copy
+                    lesson.copy(
+                        completed = matchingProgress != null,
+                        imageUrls = safeImageUrls,
+                        pdfUrls   = safePdfUrls
+                    )
                 }
+                Log.d(
+                    "LessonsScreen",
+                    "lessons: ${lessons}, progressList: $progressList"
+                )
                 loadingViewModel.setLoading(false)
             } catch (e: Exception) {
+                Log.e("LessonsScreen", "error happend：", e)
                 loadingViewModel.setLoading(false)
             }
         }
@@ -150,6 +168,7 @@ fun LessonsScreen(courseId: Int?, loadingViewModel: LoadingViewModel = viewModel
             userScrollEnabled = false // No gesture swiping, you must click the button
         ) { pageIndex ->
             val lesson = lessons[pageIndex]
+            Log.d("LessonsScreen", "当前 lesson = $lesson")
             LessonCard(
                 lesson = lesson,
                 onChangeComplete = {
