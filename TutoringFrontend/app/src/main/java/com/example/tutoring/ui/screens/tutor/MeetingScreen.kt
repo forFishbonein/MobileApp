@@ -1,3 +1,4 @@
+@file:OptIn(ExperimentalFoundationApi::class)
 package com.example.tutoring.ui.screens.tutor
 
 import android.app.DatePickerDialog
@@ -6,10 +7,12 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,6 +22,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +42,9 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import com.example.tutoring.utils.LoadingViewModel
 import com.google.gson.Gson
+//import androidx.compose.foundation.VerticalScrollbar
+//import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 data class AvailabilitySlot(
     val availabilityId: Int,
@@ -136,6 +144,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             }
         }
     }
+    val listState = rememberLazyListState()
     var meetings = remember { mutableStateListOf<Meeting>() }
     var meetingToApprove by remember { mutableStateOf<Meeting?>(null) }
     var meetingToReject  by remember { mutableStateOf<Meeting?>(null) }
@@ -194,14 +203,18 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                         // When the user clicks "Add Slot", construct a complete ISO format date and time
                         val startDateTime = "${selectedDate.format(dateFormatter)} $startTime:00"
                         val endDateTime   = "${selectedDate.format(dateFormatter)} $endTime:00"
+//                        val startDateTime = "${selectedDate.format(dateFormatter)} $startTime"
+//                        val endDateTime   = "${selectedDate.format(dateFormatter)} $endTime"
                         val dtStart = LocalDateTime.parse(startDateTime, slotFormatter)
                         val dtEnd   = LocalDateTime.parse(endDateTime,   slotFormatter)
                         //The start time must be earlier than the end time
                         if (dtStart.isBefore(dtEnd)) {
                             slots += Slot(
                                 availabilityId = nextId++,
-                                startTime     = startDateTime,
-                                endTime       = endDateTime,
+//                                startTime     = startDateTime,
+//                                endTime       = endDateTime,
+                                startTime  = dtStart.toString().replace('T', ' '),
+                                endTime    = dtEnd.toString().replace('T', ' '),
                                 isBooked      = false
                             )
                             startTime = "Select Start"
@@ -226,10 +239,11 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
         )
         Box(
             modifier = Modifier
-                .heightIn(max = 240.dp)
+                .heightIn(max = 260.dp)
                 .fillMaxWidth()
         ) {
             LazyColumn(
+                state = listState,            // ← 关键：把 state 传给 LazyColumn
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
@@ -242,11 +256,18 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                 ) { slot ->
                     SlotItem(
                         slot = slot,
-                        onDeleteRequest = { slotToDelete = slot }
+                        onDeleteRequest = {
+//                            slotToDelete = slot
+                        }
                     )
                 }
             }
-
+//            VerticalScrollbar(
+//                adapter = rememberScrollbarAdapter(listState),
+//                modifier = Modifier
+//                    .align(Alignment.CenterEnd)
+//                    .fillMaxHeight()
+//            )
             // 根据 slotToDelete 显示确认对话框
             slotToDelete?.let { slot ->
                 AlertDialog(
@@ -424,15 +445,15 @@ private fun SlotItem(
             Spacer(modifier = Modifier.width(8.dp))
 
             // Space is only left for the delete button when isBooked == false
-            if (!slot.isBooked) {
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onDeleteRequest) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete slot"
-                    )
-                }
-            }
+//            if (!slot.isBooked) {
+//                Spacer(modifier = Modifier.width(8.dp))
+//                IconButton(onClick = onDeleteRequest) {
+//                    Icon(
+//                        imageVector = Icons.Default.Delete,
+//                        contentDescription = "Delete slot"
+//                    )
+//                }
+//            }
         }
     }
 }
