@@ -34,12 +34,27 @@ public class TutorMeetingController {
                 "Slots retrieved.");
     }
 
+    /**
+     * 新增可用时间接口（只插入，不做更新 / 删除）
+     */
     @PostMapping("/availability")
-    public RestResult<?> saveSlots(@Valid @RequestBody TutorAvailabilityDTO dto) {
-        availabilitySvc.updateAvailability(
-                SecurityUtils.getCurrentUserId(), dto.getAvailabilitySlots());
-        return RestResult.success(null, "Slots updated.");
+    public RestResult<?> addSlots(@Valid @RequestBody TutorAvailabilityDTO dto) {
+
+        Long tutorId = SecurityUtils.getCurrentUserId();
+        if (tutorId == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED,
+                    "Unauthorized or session expired.");
+        }
+
+        availabilitySvc.addAvailability(tutorId, dto.getAvailabilitySlots());
+        return RestResult.success(null, "Slots added.");
     }
+//    @PostMapping("/availability")
+//    public RestResult<?> saveSlots(@Valid @RequestBody TutorAvailabilityDTO dto) {
+//        availabilitySvc.updateAvailability(
+//                SecurityUtils.getCurrentUserId(), dto.getAvailabilitySlots());
+//        return RestResult.success(null, "Slots updated.");
+//    }
 
     @GetMapping("/requests/pending")
     public RestResult<?> pending() {
