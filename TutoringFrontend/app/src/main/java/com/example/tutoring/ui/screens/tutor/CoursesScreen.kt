@@ -169,28 +169,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                             label = { Text("Course Name") },
                             modifier = Modifier.fillMaxWidth().testTag("courseNameField")
                         )
-//                        OutlinedTextField(
-//                            value = courseDescription,
-//                            onValueChange = { courseDescription = it },
-//                            label = { Text("Description") },
-//                            modifier = Modifier.fillMaxWidth().testTag("courseDescField")
-//                        )
-                        OutlinedTextField(
-                            value = courseDescription,
-                            onValueChange = { courseDescription = it },
-                            label = { Text("Description") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .testTag("courseDescField"),
-                            singleLine = false,
-                            maxLines = 3,
-                            // Specify the soft keyboard action to avoid "Next" being defaulted as "Done".
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Default
-                            )
-                        )
-//                        OutlinedTextField(
+                        //                        OutlinedTextField(
 //                            value = courseSubject,
 //                            onValueChange = { courseSubject = it },
 //                            label = { Text("Subject") },
@@ -230,6 +209,27 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                                 }
                             }
                         }
+//                        OutlinedTextField(
+//                            value = courseDescription,
+//                            onValueChange = { courseDescription = it },
+//                            label = { Text("Description") },
+//                            modifier = Modifier.fillMaxWidth().testTag("courseDescField")
+//                        )
+                        OutlinedTextField(
+                            value = courseDescription,
+                            onValueChange = { courseDescription = it },
+                            label = { Text("Description") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .testTag("courseDescField"),
+                            singleLine = false,
+                            maxLines = 3,
+                            // Specify the soft keyboard action to avoid "Next" being defaulted as "Done".
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Default
+                            )
+                        )
                     }
                 },
                 confirmButton = {
