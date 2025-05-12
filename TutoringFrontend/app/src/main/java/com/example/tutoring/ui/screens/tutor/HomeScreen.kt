@@ -250,24 +250,26 @@ fun StudentProgressChart(
         modifier = modifier
             .heightIn(max = maxHeight)          // 限制高度
             .verticalScroll(scrollState)         // 可竖向滚动
-            .padding(top = 8.dp)
+//            .padding(top = 8.dp)
     ) {
         progressList.forEach { sp ->
             val frac = sp.progressPercent / 100f
             val percent = sp.progressPercent
 
             val barColor = when {
-                percent >= 100 -> Color(0xFF4CAF50)
-                percent >= 50  -> Color(0xFFFFA000)
-                else           -> Color(0xFFD32F2F)
+                percent >= 100       -> Color(0xFF4CAF50) // Green
+                percent >=  75       -> Color(0xFF8BC34A) // Light‐Green
+                percent >=  50       -> Color(0xFFFFA000) // Orange
+                percent >=  25       -> Color(0xFFD32F2F) // Red
+                else /* 0..24 */     -> Color(0xFF7B1FA2) // Purple
             }
 
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Column(modifier = Modifier.padding(vertical = 2.dp)) {
                 Text(text = sp.nickname)
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(18.dp)
+                        .height(10.dp)
                         .background(Color.LightGray, shape = MaterialTheme.shapes.medium)
                 ) {
                     Box(
@@ -475,13 +477,22 @@ fun ProgressPieChart(
     val total = counts.values.sum().coerceAtLeast(1)
 
     // 2) Prepare a list of colors to cycle through
-    val sliceColors = listOf(
-        Color(0xFF4CAF50), // green
-        Color(0xFFFFA000), // orange
-        Color(0xFFD32F2F), // red
-        Color(0xFF1976D2), // blue
-        Color(0xFF7B1FA2)  // purple
-    )
+//    val sliceColors = listOf(
+//        Color(0xFF4CAF50), // green
+//        Color(0xFFFFA000), // orange
+//        Color(0xFFD32F2F), // red
+//        Color(0xFF1976D2), // blue
+//        Color(0xFF7B1FA2)  // purple
+//    )
+    val sliceColors = counts.keys.map { percent ->
+        when {
+            percent >= 100       -> Color(0xFF4CAF50) // Green
+            percent >=  75       -> Color(0xFF8BC34A) // Light‐Green
+            percent >=  50       -> Color(0xFFFFA000) // Orange
+            percent >=  25       -> Color(0xFFD32F2F) // Red
+            else /* 0..24 */     -> Color(0xFF7B1FA2) // Purple
+        }
+    }
     val density = LocalDensity.current
     val labelTextSize = with(density) { 12.sp.toPx() }
     val whiteIntColor = android.graphics.Color.WHITE
