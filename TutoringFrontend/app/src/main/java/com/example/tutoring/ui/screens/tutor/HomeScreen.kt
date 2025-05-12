@@ -11,11 +11,14 @@ import androidx.compose.runtime.getValue
 import com.example.tutoring.data.StudentProgress
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +39,9 @@ import com.github.tehras.charts.bar.renderer.xaxis.SimpleXAxisDrawer
 import com.github.tehras.charts.bar.renderer.yaxis.SimpleYAxisDrawer
 import com.github.tehras.charts.piechart.animation.simpleChartAnimation
 import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
+
 //import com.example.tutoring.data.mockCourses
 
 
@@ -215,25 +221,45 @@ fun HomeScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    ProgressCountBarChart(progressList = students)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()         // or .fillMaxWidth()
+                    ) {
+                        ProgressPieChart(
+                            progressList = students,
+                            modifier     = Modifier.align(Alignment.Center)  // center in Box
+                        )
+                    }
+//                    ProgressCountBarChart(progressList = students)
+//                    ProgressPieChart(progressList = students)
                 }
         }
     }
 }
 
 @Composable
-fun StudentProgressChart(progressList: List<StudentProgress>) {
-    Column(modifier = Modifier.padding(top = 8.dp)) {
+fun StudentProgressChart(
+    progressList: List<StudentProgress>,
+    modifier: Modifier = Modifier,
+    maxHeight: Dp = 300.dp    // 你想要的最大高度
+) {
+    // 创建一个 ScrollState
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .heightIn(max = maxHeight)          // 限制高度
+            .verticalScroll(scrollState)         // 可竖向滚动
+            .padding(top = 8.dp)
+    ) {
         progressList.forEach { sp ->
-            // 假设 sp.progressPercent 是 0..100
             val frac = sp.progressPercent / 100f
             val percent = sp.progressPercent
 
             val barColor = when {
-                percent >= 100 -> Color(0xFF4CAF50) // Green
-                percent >= 50 -> Color(0xFFFFA000) // Orange
-                else -> Color(0xFFD32F2F)          // Red
+                percent >= 100 -> Color(0xFF4CAF50)
+                percent >= 50  -> Color(0xFFFFA000)
+                else           -> Color(0xFFD32F2F)
             }
 
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -257,6 +283,7 @@ fun StudentProgressChart(progressList: List<StudentProgress>) {
         }
     }
 }
+
 
 //@Composable
 //fun ProgressCountBarChart(
@@ -306,131 +333,221 @@ fun StudentProgressChart(progressList: List<StudentProgress>) {
 //    )
 //}
 
+//柱状图
+//@Composable
+//fun ProgressCountBarChart(
+//    progressList: List<StudentProgress>,
+//    modifier: Modifier = Modifier,
+//    barWidthDp: Dp = 28.dp,
+//    axisStroke: Float = 1f             // width of the axis lines
+//) {
+//    /* ---------- Count the number of students per progress percentage ---------- */
+//    val counts = remember(progressList) {
+//        progressList.groupingBy { it.progressPercent }
+//            .eachCount()
+//            .toSortedMap()                 // ensures keys are in order: 0 → 25 → 100
+//    }
+//    val maxCount = counts.values.maxOrNull() ?: 1
+//
+//    /* ---------- Compute dimensions in pixels ---------- */
+//    val density = LocalDensity.current
+//    val barWidthPx   = with(density) { barWidthDp.toPx() }
+//    val xLabelHeight = with(density) { 18.dp.toPx() }
+//    val topPadding   = with(density) { 12.dp.toPx() }
+//    val yAxisWidth   = with(density) { 36.dp.toPx() }   // left margin for Y-axis labels
+//
+//    Canvas(
+//        modifier = modifier
+//            .fillMaxWidth()
+//            .height(240.dp)                // total component height, adjust as needed
+//            .padding(horizontal = 12.dp)
+//    ) {
+//        /* ---------- Define the drawing area ---------- */
+//        val chartLeft   = yAxisWidth
+//        val chartRight  = size.width
+//        val chartBottom = size.height - xLabelHeight
+//        val chartTop    = topPadding
+//        val chartHeight = chartBottom - chartTop
+//
+//        /* ---------- Draw Y-axis integer ticks & horizontal grid lines ---------- */
+//        val yStep = 1                     // one person per tick; change to 2 or 5 for sparser ticks
+//        val steps = ((maxCount + yStep - 1) / yStep).coerceAtLeast(1)
+//        val stepPx = chartHeight / steps
+//
+//        val textPaint = android.graphics.Paint().apply {
+//            color       = android.graphics.Color.BLACK
+//            textSize    = with(density) { 12.sp.toPx() }
+//            textAlign   = android.graphics.Paint.Align.RIGHT
+//            isAntiAlias = true
+//        }
+//
+//        for (i in 0..steps) {
+//            val y = chartBottom - i * stepPx
+//            // draw horizontal grid line
+//            drawLine(
+//                color       = Color.LightGray,
+//                start       = Offset(chartLeft, y),
+//                end         = Offset(chartRight, y),
+//                strokeWidth = axisStroke
+//            )
+//            // draw integer tick label
+//            val label = (i * yStep).toString()
+//            drawContext.canvas.nativeCanvas.drawText(
+//                label,
+//                /* x */ chartLeft - 4.dp.toPx(),
+//                /* y */ y + textPaint.textSize / 2,   // vertically center text
+//                textPaint
+//            )
+//        }
+//
+//        /* ---------- Draw the bars ---------- */
+//        val slotWidth = (chartRight - chartLeft) / counts.size
+//        counts.values.forEachIndexed { idx, count ->
+//            val percent = counts.keys.elementAt(idx)
+//            // calculate bar rectangle
+//            val barLeft   = chartLeft + idx * slotWidth + (slotWidth - barWidthPx) / 2
+//            val barHeight = if (maxCount == 0)
+//                0f else chartHeight * count / maxCount.toFloat()
+//            val barTop    = chartBottom - barHeight
+//
+//            // choose color based on progress
+//            val barColor = when {
+//                percent >= 100 -> Color(0xFF4CAF50)
+//                percent >= 50  -> Color(0xFFFFA000)
+//                else           -> Color(0xFFD32F2F)
+//            }
+//
+//            // draw the bar
+//            drawRect(
+//                color   = barColor,
+//                topLeft = Offset(barLeft, barTop),
+//                size    = Size(barWidthPx, barHeight)
+//            )
+//
+//            // draw the count label above the bar
+//            val countLabel = "$count people"
+//            drawContext.canvas.nativeCanvas.drawText(
+//                countLabel,
+//                barLeft + barWidthPx / 2,
+//                barTop - 4.dp.toPx(),
+//                textPaint.apply { textAlign = android.graphics.Paint.Align.CENTER }
+//            )
+//
+//            // draw the X-axis percentage label
+//            drawContext.canvas.nativeCanvas.drawText(
+//                "$percent%",
+//                barLeft + barWidthPx / 2,
+//                chartBottom + xLabelHeight - 4.dp.toPx(),
+//                textPaint
+//            )
+//        }
+//
+//        /* ---------- Draw the Y and X axes ---------- */
+//        // Y-axis line
+//        drawLine(
+//            color       = Color.Black,
+//            start       = Offset(chartLeft, chartTop),
+//            end         = Offset(chartLeft, chartBottom),
+//            strokeWidth = axisStroke
+//        )
+//        // X-axis line
+//        drawLine(
+//            color       = Color.Black,
+//            start       = Offset(chartLeft, chartBottom),
+//            end         = Offset(chartRight, chartBottom),
+//            strokeWidth = axisStroke
+//        )
+//    }
+//}
 @Composable
-fun ProgressCountBarChart(
+fun ProgressPieChart(
     progressList: List<StudentProgress>,
     modifier: Modifier = Modifier,
-    barWidthDp: Dp = 28.dp,
-    axisStroke: Float = 1f             // width of the axis lines
+    sizeDp: Dp = 240.dp
 ) {
-    /* ---------- Count the number of students per progress percentage ---------- */
+    // 1) Group by percent and count occurrences
     val counts = remember(progressList) {
-        progressList.groupingBy { it.progressPercent }
+        progressList
+            .groupingBy { it.progressPercent }
             .eachCount()
-            .toSortedMap()                 // ensures keys are in order: 0 → 25 → 100
+            .toSortedMap()  // keep keys in ascending order
     }
-    val maxCount = counts.values.maxOrNull() ?: 1
+    val total = counts.values.sum().coerceAtLeast(1)
 
-    /* ---------- Compute dimensions in pixels ---------- */
+    // 2) Prepare a list of colors to cycle through
+    val sliceColors = listOf(
+        Color(0xFF4CAF50), // green
+        Color(0xFFFFA000), // orange
+        Color(0xFFD32F2F), // red
+        Color(0xFF1976D2), // blue
+        Color(0xFF7B1FA2)  // purple
+    )
     val density = LocalDensity.current
-    val barWidthPx   = with(density) { barWidthDp.toPx() }
-    val xLabelHeight = with(density) { 18.dp.toPx() }
-    val topPadding   = with(density) { 12.dp.toPx() }
-    val yAxisWidth   = with(density) { 36.dp.toPx() }   // left margin for Y-axis labels
-
+    val labelTextSize = with(density) { 12.sp.toPx() }
+    val whiteIntColor = android.graphics.Color.WHITE
     Canvas(
         modifier = modifier
-            .fillMaxWidth()
-            .height(240.dp)                // total component height, adjust as needed
-            .padding(horizontal = 12.dp)
+            .size(sizeDp)               // fixed width & height
+            .padding(16.dp)
     ) {
-        /* ---------- Define the drawing area ---------- */
-        val chartLeft   = yAxisWidth
-        val chartRight  = size.width
-        val chartBottom = size.height - xLabelHeight
-        val chartTop    = topPadding
-        val chartHeight = chartBottom - chartTop
+        // 3) Compute center and radius
+        val canvasSize = size.minDimension
+        val radius = canvasSize / 2
+        val center = Offset(x = size.width / 2, y = size.height / 2)
 
-        /* ---------- Draw Y-axis integer ticks & horizontal grid lines ---------- */
-        val yStep = 1                     // one person per tick; change to 2 or 5 for sparser ticks
-        val steps = ((maxCount + yStep - 1) / yStep).coerceAtLeast(1)
-        val stepPx = chartHeight / steps
+        // 4) Draw each slice
+        var startAngle = -90f  // start at top (12 o'clock)
+        counts.entries.forEachIndexed { index, (percent, count) ->
+            val sweep = count / total.toFloat() * 360f
 
-        val textPaint = android.graphics.Paint().apply {
-            color       = android.graphics.Color.BLACK
-            textSize    = with(density) { 12.sp.toPx() }
-            textAlign   = android.graphics.Paint.Align.RIGHT
-            isAntiAlias = true
-        }
+            // pick a color from our list, cycling if necessary
+            var color = sliceColors[index % sliceColors.size]
 
-        for (i in 0..steps) {
-            val y = chartBottom - i * stepPx
-            // draw horizontal grid line
-            drawLine(
-                color       = Color.LightGray,
-                start       = Offset(chartLeft, y),
-                end         = Offset(chartRight, y),
-                strokeWidth = axisStroke
+            drawArc(
+                color = color,
+                startAngle = startAngle,
+                sweepAngle = sweep,
+                useCenter = true,       // draws a pie slice instead of an arc ring
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2, radius * 2)
             )
-            // draw integer tick label
-            val label = (i * yStep).toString()
-            drawContext.canvas.nativeCanvas.drawText(
-                label,
-                /* x */ chartLeft - 4.dp.toPx(),
-                /* y */ y + textPaint.textSize / 2,   // vertically center text
-                textPaint
-            )
-        }
 
-        /* ---------- Draw the bars ---------- */
-        val slotWidth = (chartRight - chartLeft) / counts.size
-        counts.values.forEachIndexed { idx, count ->
-            val percent = counts.keys.elementAt(idx)
-            // calculate bar rectangle
-            val barLeft   = chartLeft + idx * slotWidth + (slotWidth - barWidthPx) / 2
-            val barHeight = if (maxCount == 0)
-                0f else chartHeight * count / maxCount.toFloat()
-            val barTop    = chartBottom - barHeight
+            // 5) Draw label in the middle of the slice
+            val labelAngle = startAngle + sweep / 2
+            val labelRadius = radius * 0.6f      // move label halfway out
+            val labelX = center.x + cos(Math.toRadians(labelAngle.toDouble())).toFloat() * labelRadius
+            val labelY = center.y + sin(Math.toRadians(labelAngle.toDouble())).toFloat() * labelRadius
 
-            // choose color based on progress
-            val barColor = when {
-                percent >= 100 -> Color(0xFF4CAF50)
-                percent >= 50  -> Color(0xFFFFA000)
-                else           -> Color(0xFFD32F2F)
+            drawContext.canvas.nativeCanvas.apply {
+                val txt = "$percent%\n($count)"
+                val paint = android.graphics.Paint().apply {
+//                    color = whiteIntColor
+                    textSize = 12.sp.toPx()
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    isAntiAlias = true
+                }
+                // draw multiline centered
+                val lines = txt.split("\n")
+                val lineHeight = paint.fontSpacing
+                val offsetY = (lines.size - 1) * lineHeight / 2
+                lines.forEachIndexed { i, line ->
+                    drawText(line, labelX, labelY - offsetY + i * lineHeight, paint)
+                }
             }
 
-            // draw the bar
-            drawRect(
-                color   = barColor,
-                topLeft = Offset(barLeft, barTop),
-                size    = Size(barWidthPx, barHeight)
-            )
-
-            // draw the count label above the bar
-            val countLabel = "$count people"
-            drawContext.canvas.nativeCanvas.drawText(
-                countLabel,
-                barLeft + barWidthPx / 2,
-                barTop - 4.dp.toPx(),
-                textPaint.apply { textAlign = android.graphics.Paint.Align.CENTER }
-            )
-
-            // draw the X-axis percentage label
-            drawContext.canvas.nativeCanvas.drawText(
-                "$percent%",
-                barLeft + barWidthPx / 2,
-                chartBottom + xLabelHeight - 4.dp.toPx(),
-                textPaint
-            )
+            startAngle += sweep
         }
 
-        /* ---------- Draw the Y and X axes ---------- */
-        // Y-axis line
-        drawLine(
-            color       = Color.Black,
-            start       = Offset(chartLeft, chartTop),
-            end         = Offset(chartLeft, chartBottom),
-            strokeWidth = axisStroke
-        )
-        // X-axis line
-        drawLine(
-            color       = Color.Black,
-            start       = Offset(chartLeft, chartBottom),
-            end         = Offset(chartRight, chartBottom),
-            strokeWidth = axisStroke
+        // 6) Optional: draw a thin white circle stroke to separate slices
+        drawCircle(
+            color = Color.White,
+            radius = radius,
+            center = center,
+            style = Stroke(width = 2.dp.toPx())
         )
     }
 }
+
 
 
 //@Preview(showBackground = true)
