@@ -14,71 +14,23 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 
 @Slf4j
 @Service
 public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityDao, TutorAvailability>
         implements TutorAvailabilityService {
-
-    private static final int RANGE_DAYS = 7;
-
-//    @Override
-//    @Transactional
-//    public void updateAvailability(Long tutorId, List<AvailabilitySlotDTO> newSlots) {
-//
-//        LocalDateTime now = LocalDateTime.now();
-//        LocalDateTime limit = now.plusDays(RANGE_DAYS);
-//
-//        List<AvailabilitySlotDTO> valid = newSlots.stream()
-//                .filter(s -> !s.getStartTime().isBefore(now) &&
-//                        !s.getEndTime().isAfter(limit) &&
-//                        s.getEndTime().isAfter(s.getStartTime()))
-//                .collect(Collectors.toList());
-//
-//        List<TutorAvailability> existing = lambdaQuery()
-//                .eq(TutorAvailability::getTutorId, tutorId)
-//                .ge(TutorAvailability::getStartTime, now)
-//                .le(TutorAvailability::getEndTime, limit)
-//                .list();
-//
-//        Map<String, TutorAvailability> existMap = existing.stream()
-//                .collect(Collectors.toMap(
-//                        v -> v.getStartTime() + "_" + v.getEndTime(),
-//                        v -> v));
-//
-//        Set<String> newKeys = valid.stream()
-//                .map(v -> v.getStartTime() + "_" + v.getEndTime())
-//                .collect(Collectors.toSet());
-//
-//        List<TutorAvailability> toInsert = valid.stream()
-//                .filter(v -> !existMap.containsKey(v.getStartTime() + "_" + v.getEndTime()))
-//                .map(v -> TutorAvailability.builder()
-//                        .tutorId(tutorId)
-//                        .startTime(v.getStartTime())
-//                        .endTime(v.getEndTime())
-//                        .isBooked(false)
-//                        .build())
-//                .collect(Collectors.toList());
-//        if (!toInsert.isEmpty()) this.saveBatch(toInsert);
-//
-//        List<Long> toDelete = existing.stream()
-//                .filter(v -> !newKeys.contains(v.getStartTime() + "_" + v.getEndTime())
-//                        && !Boolean.TRUE.equals(v.getIsBooked()))
-//                .map(TutorAvailability::getAvailabilityId)
-//                .collect(Collectors.toList());
-//        if (!toDelete.isEmpty()) this.removeByIds(toDelete);
-//
-//    }
     /** 允许前端一次性添加未来 30 天内的时间段 */
     private static final int DAYS_AHEAD = 30;
 
     /**
-     * 只插入新时间段：
-     *  - 校验时间合法性
-     *  - 超过 30 天的忽略
-     *  - start 需 < end
+     * 仅执行“新增”：
+     * 1. 校验时间合法 & 去重
+     * 2. 过滤掉数据库已有的同段
+     * 3. 批量插入真正新增的记录
      */
     @Override
     @Transactional
@@ -92,11 +44,36 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
         LocalDateTime now   = LocalDateTime.now();
         LocalDateTime limit = now.plusDays(DAYS_AHEAD);
 
-        List<TutorAvailability> toInsert = slots.stream()
+        /* ---------- 1. 基本校验 + List 内部去重 ---------- */
+        Map<String, AvailabilitySlotDTO> uniq = slots.stream()
                 .filter(s -> s.getStartTime() != null && s.getEndTime() != null)
-                .filter(s -> !s.getStartTime().isBefore(now))      // start ≥ now
-                .filter(s ->  s.getEndTime().isAfter(s.getStartTime()))
-                .filter(s -> !s.getEndTime().isAfter(limit))       // end ≤ now+30d
+                .filter(s -> !s.getStartTime().isBefore(now))             // start ≥ now
+                .filter(s ->  s.getEndTime().isAfter(s.getStartTime()))   // end   > start
+                .filter(s -> !s.getEndTime().isAfter(limit))              // end ≤ now+30d
+                .collect(Collectors.toMap(
+                        s -> keyOf(s),            // key = "start_end"
+                        Function.identity(),
+                        (oldVal, newVal) -> oldVal,          // 去重：保留第一次出现
+                        LinkedHashMap::new));                // 保持顺序──可选
+
+        if (uniq.isEmpty()) {
+            log.info("Tutor[{}] addAvailability – all slots invalid / >30d.", tutorId);
+            return;
+        }
+
+        /* ---------- 2. 拉出 tutor 现有空闲段构建 key-set ---------- */
+        Set<String> dbKeys = lambdaQuery()
+                .eq(TutorAvailability::getTutorId, tutorId)
+                .ge(TutorAvailability::getStartTime, now)
+                .le(TutorAvailability::getEndTime,   limit)
+                .list()
+                .stream()
+                .map(v -> keyOf(v.getStartTime(), v.getEndTime()))
+                .collect(Collectors.toSet());
+
+        /* ---------- 3. 只留下真正“新增”的 ---------- */
+        List<TutorAvailability> toInsert = uniq.values().stream()
+                .filter(s -> !dbKeys.contains(keyOf(s)))          // 表中不存在
                 .map(s -> TutorAvailability.builder()
                         .tutorId(tutorId)
                         .startTime(s.getStartTime())
@@ -105,15 +82,24 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
                         .build())
                 .collect(Collectors.toList());
 
-        /* 如果全部都被排除，只记录日志即可 */
         if (toInsert.isEmpty()) {
-            log.info("Tutor[{}] tried to add slots – all invalid or >30 days.", tutorId);
+            log.info("Tutor[{}] addAvailability – nothing new (all duplicates).", tutorId);
             return;
         }
 
+        /* ---------- 4. 批量落库 ---------- */
         saveBatch(toInsert);
-        log.info("Tutor[{}] added {} availability slots.", tutorId, toInsert.size());
+        log.info("Tutor[{}] added {} new availability slots.", tutorId, toInsert.size());
     }
+
+    /* key 生成工具（保持统一） */
+    private static String keyOf(AvailabilitySlotDTO dto){
+        return keyOf(dto.getStartTime(), dto.getEndTime());
+    }
+    private static String keyOf(LocalDateTime start, LocalDateTime end){
+        return start + "_" + end;
+    }
+
 
     @Override
     public List<TutorAvailability> listFutureSlots(Long tutorId) {
