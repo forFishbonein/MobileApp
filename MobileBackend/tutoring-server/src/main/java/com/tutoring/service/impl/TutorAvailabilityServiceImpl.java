@@ -23,15 +23,8 @@ import java.util.LinkedHashMap;
 @Service
 public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityDao, TutorAvailability>
         implements TutorAvailabilityService {
-    /** 允许前端一次性添加未来 30 天内的时间段 */
     private static final int DAYS_AHEAD = 30;
 
-    /**
-     * 仅执行“新增”：
-     * 1. 校验时间合法 & 去重
-     * 2. 过滤掉数据库已有的同段
-     * 3. 批量插入真正新增的记录
-     */
     @Override
     @Transactional
     public void addAvailability(Long tutorId, List<AvailabilitySlotDTO> slots) {
@@ -44,24 +37,22 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
         LocalDateTime now   = LocalDateTime.now();
         LocalDateTime limit = now.plusDays(DAYS_AHEAD);
 
-        /* ---------- 1. 基本校验 + List 内部去重 ---------- */
         Map<String, AvailabilitySlotDTO> uniq = slots.stream()
                 .filter(s -> s.getStartTime() != null && s.getEndTime() != null)
-                .filter(s -> !s.getStartTime().isBefore(now))             // start ≥ now
-                .filter(s ->  s.getEndTime().isAfter(s.getStartTime()))   // end   > start
-                .filter(s -> !s.getEndTime().isAfter(limit))              // end ≤ now+30d
+                .filter(s -> !s.getStartTime().isBefore(now))
+                .filter(s ->  s.getEndTime().isAfter(s.getStartTime()))
+                .filter(s -> !s.getEndTime().isAfter(limit))
                 .collect(Collectors.toMap(
-                        s -> keyOf(s),            // key = "start_end"
+                        s -> keyOf(s),
                         Function.identity(),
-                        (oldVal, newVal) -> oldVal,          // 去重：保留第一次出现
-                        LinkedHashMap::new));                // 保持顺序──可选
+                        (oldVal, newVal) -> oldVal,
+                        LinkedHashMap::new));
 
         if (uniq.isEmpty()) {
             log.info("Tutor[{}] addAvailability – all slots invalid / >30d.", tutorId);
             return;
         }
 
-        /* ---------- 2. 拉出 tutor 现有空闲段构建 key-set ---------- */
         Set<String> dbKeys = lambdaQuery()
                 .eq(TutorAvailability::getTutorId, tutorId)
                 .ge(TutorAvailability::getStartTime, now)
@@ -71,9 +62,8 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
                 .map(v -> keyOf(v.getStartTime(), v.getEndTime()))
                 .collect(Collectors.toSet());
 
-        /* ---------- 3. 只留下真正“新增”的 ---------- */
         List<TutorAvailability> toInsert = uniq.values().stream()
-                .filter(s -> !dbKeys.contains(keyOf(s)))          // 表中不存在
+                .filter(s -> !dbKeys.contains(keyOf(s)))
                 .map(s -> TutorAvailability.builder()
                         .tutorId(tutorId)
                         .startTime(s.getStartTime())
@@ -87,12 +77,10 @@ public class TutorAvailabilityServiceImpl extends ServiceImpl<TutorAvailabilityD
             return;
         }
 
-        /* ---------- 4. 批量落库 ---------- */
         saveBatch(toInsert);
         log.info("Tutor[{}] added {} new availability slots.", tutorId, toInsert.size());
     }
 
-    /* key 生成工具（保持统一） */
     private static String keyOf(AvailabilitySlotDTO dto){
         return keyOf(dto.getStartTime(), dto.getEndTime());
     }
