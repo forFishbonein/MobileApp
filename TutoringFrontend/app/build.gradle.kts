@@ -27,6 +27,9 @@ android {
             )
         }
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.0"  // 或更高
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -77,4 +80,5 @@ dependencies {
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.compose.foundation:foundation:1.4.0")
 }

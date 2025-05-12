@@ -12,14 +12,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +37,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -119,6 +125,20 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
     var courseDescription by remember { mutableStateOf("") }
     var courseSubject by remember { mutableStateOf("") }
     var wannaUpdateCourseId by remember { mutableIntStateOf(0) }
+    // List of optional subjects
+    val subjects = listOf(
+        "Computer Science",
+        "Mathematics",
+        "History",
+        "Language Arts",
+        "Physics",
+        "Biology",
+        "Chemistry",
+        "Art",
+        "Music",
+        "Economics"
+    )
+    var expanded by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -149,17 +169,66 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                             label = { Text("Course Name") },
                             modifier = Modifier.fillMaxWidth().testTag("courseNameField")
                         )
+                        //                        OutlinedTextField(
+//                            value = courseSubject,
+//                            onValueChange = { courseSubject = it },
+//                            label = { Text("Subject") },
+//                            modifier = Modifier.fillMaxWidth().testTag("courseSubjectField")
+//                        )
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("courseSubjectField")
+                        ) {
+                            TextField(
+                                readOnly = true,
+                                value = if (courseSubject.isEmpty()) "Select Subject" else courseSubject,
+                                onValueChange = { /* no-op */ },
+                                label = { Text("Subject") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                modifier = Modifier
+                                    .menuAnchor() // This line must be added
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                subjects.forEach { subject ->
+                                    DropdownMenuItem(
+                                        text = { Text(subject) },
+                                        onClick = {
+//                                            onSubjectChange(subject)
+                                            courseSubject = subject
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+//                        OutlinedTextField(
+//                            value = courseDescription,
+//                            onValueChange = { courseDescription = it },
+//                            label = { Text("Description") },
+//                            modifier = Modifier.fillMaxWidth().testTag("courseDescField")
+//                        )
                         OutlinedTextField(
                             value = courseDescription,
                             onValueChange = { courseDescription = it },
                             label = { Text("Description") },
-                            modifier = Modifier.fillMaxWidth().testTag("courseDescField")
-                        )
-                        OutlinedTextField(
-                            value = courseSubject,
-                            onValueChange = { courseSubject = it },
-                            label = { Text("Subject") },
-                            modifier = Modifier.fillMaxWidth().testTag("courseSubjectField")
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .testTag("courseDescField"),
+                            singleLine = false,
+                            maxLines = 3,
+                            // Specify the soft keyboard action to avoid "Next" being defaulted as "Done".
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Default
+                            )
                         )
                     }
                 },
