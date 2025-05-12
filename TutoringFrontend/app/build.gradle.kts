@@ -81,4 +81,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.compose.foundation:foundation:1.4.0")
+//    implementation("com.github.tehras:charts:1.0.0")
+    implementation("com.github.tehras:charts:0.2.4-alpha")
 }
