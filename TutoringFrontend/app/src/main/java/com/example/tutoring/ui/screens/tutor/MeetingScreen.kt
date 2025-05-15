@@ -121,6 +121,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
 
     // --- Slot list  ---
     val slots = remember { mutableStateListOf<Slot>() }
+    val newSlots = remember { mutableStateListOf<Slot>() }
     var nextId by remember { mutableStateOf(1) }
     var slotToDelete by remember { mutableStateOf<Slot?>(null) }
     fun getAllSlots(){
@@ -209,7 +210,7 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                         val dtEnd   = LocalDateTime.parse(endDateTime,   slotFormatter)
                         //The start time must be earlier than the end time
                         if (dtStart.isBefore(dtEnd)) {
-                            slots += Slot(
+                            newSlots += Slot(
                                 availabilityId = nextId++,
 //                                startTime     = startDateTime,
 //                                endTime       = endDateTime,
@@ -261,6 +262,17 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
                         }
                     )
                 }
+                items(
+                    items = newSlots,
+                    key = { it.availabilityId }
+                ) { slot ->
+                    SlotItem(
+                        slot = slot,
+                        onDeleteRequest = {
+//                            slotToDelete = slot
+                        }
+                    )
+                }
             }
 //            VerticalScrollbar(
 //                adapter = rememberScrollbarAdapter(listState),
@@ -300,13 +312,15 @@ fun MeetingScreen(loadingViewModel: LoadingViewModel = viewModel()) {
             ) {
                 Button(
                     onClick = {
-                        val availabilitySlots = slots.map { slot ->
-                            AvailabilitySlot(
-                                availabilityId = slot.availabilityId,
-                                startTime = "${slot.startTime}:00",  // ISO format
-                                endTime   = "${slot.endTime}:00"
-                            )
-                        }
+                        val availabilitySlots = newSlots
+                            .filter { it.isBooked != true }      // 只保留未被预订的
+                            .map { slot ->
+                                AvailabilitySlot(
+                                    availabilityId = slot.availabilityId,
+                                    startTime = "${slot.startTime}:00",  // ISO format
+                                    endTime   = "${slot.endTime}:00"
+                                )
+                            }
                         val request = AvailabilityRequest(availabilitySlots)
                         coroutineScope.launch {
 //                    loadingViewModel.setLoading(true)

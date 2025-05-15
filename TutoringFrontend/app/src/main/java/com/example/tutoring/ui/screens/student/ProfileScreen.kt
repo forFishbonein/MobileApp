@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.tutoring.R
 import com.example.tutoring.data.UserInfo
 import com.example.tutoring.network.ApiService
 import com.example.tutoring.network.NetworkClient
@@ -129,18 +131,25 @@ fun ProfileScreen(
                     imagePickerLauncher.launch("image/*")
                 }
         ) {
+//            AsyncImage(
+//                model = avatarUrl,
+//                contentDescription = "Avatar",
+//                modifier = Modifier.fillMaxSize(),
+//                contentScale = ContentScale.Crop  // Let the picture crop and fill the entire circle
+//            )
             AsyncImage(
-                model = avatarUrl,
+                model           = avatarUrl,
                 contentDescription = "Avatar",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop  // Let the picture crop and fill the entire circle
+                placeholder     = painterResource(R.drawable.avatar_placeholder),
+                error           = painterResource(R.drawable.avatar_error),
+                modifier        = Modifier.fillMaxSize(),
+                contentScale    = ContentScale.Crop
             )
         }
         Text(
             text = "Tap avatar to change",
             style = MaterialTheme.typography.labelSmall
         )
-
         // uneditable
         Card(
             shape = RoundedCornerShape(16.dp),

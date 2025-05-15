@@ -169,7 +169,7 @@ fun CoursesScreen(navController: NavHostController, loadingViewModel: LoadingVie
                             label = { Text("Course Name") },
                             modifier = Modifier.fillMaxWidth().testTag("courseNameField")
                         )
-                        //                        OutlinedTextField(
+                        // OutlinedTextField(
 //                            value = courseSubject,
 //                            onValueChange = { courseSubject = it },
 //                            label = { Text("Subject") },
