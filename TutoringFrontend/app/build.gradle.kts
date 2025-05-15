@@ -28,7 +28,7 @@ android {
         }
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.0"  // 或更高
+        kotlinCompilerExtensionVersion = "1.4.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

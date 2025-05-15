@@ -87,7 +87,7 @@ interface ApiService {
     @GET("/course/registrations/student")
     suspend fun listStudentRegistrations(): SpecialResponse<List<Registration>>
 
-    //这个是查的老师的
+    //below is for tutor
     @GET("/course/registrations")
     suspend fun listAllRegistrations(): SpecialResponse<List<Registration>>
 

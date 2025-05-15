@@ -48,8 +48,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val apiService = NetworkClient.createService(ApiService::class.java)
 
-    // --- “忘记密码”两步弹窗相关 state ---
-    var showResetDialog by remember { mutableStateOf(false) }      // 第一步：输入邮箱
+    // --- "Forgot password" Two-step pop-up window related state ---
+    var showResetDialog by remember { mutableStateOf(false) }      // Step 1: Enter your email address
     var showNewPasswordDialog by remember { mutableStateOf(false) }// 第二步：输入新密码
     var resetEmail by remember { mutableStateOf("") }
     var resetToken by remember { mutableStateOf("") }
@@ -86,13 +86,13 @@ fun LoginScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        // Forgot Password 链接，靠右显示
+        // Password link, shown on the right
         Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth()) {
             TextButton(
                 onClick = {
-                    /* 打开重置密码流程 */
-                    resetEmail = email  // 如果登录框里已经填了 email，可以预填
+                    /* Open the password reset process */
+                    resetEmail = email  // If the email has already been filled in the login box, it can be pre-filled
                     showResetDialog = true
                 },
                 modifier = Modifier.align(Alignment.CenterEnd)
@@ -102,7 +102,7 @@ fun LoginScreen(
                 )
             }
         }
-        // --- 第一步弹窗：输入邮箱 ---
+        // --- The first pop-up window: Enter your email address ---
         if (showResetDialog) {
             AlertDialog(
                 onDismissRequest = { showResetDialog = false },
@@ -110,7 +110,7 @@ fun LoginScreen(
                     Text(
                     "Reset Password",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 18.sp  // 比默认 titleLarge 小一号
+                        fontSize = 18.sp  // One size smaller than the default titleLarge
                     ))
                 },
                 text = {
@@ -129,13 +129,13 @@ fun LoginScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            // 调用 forgotPassword
+                            // Call forgotPassword
                             showResetDialog = false
                             scope.launch {
                                 try {
                                     val resp = apiService.forgotPassword(mapOf("email" to resetEmail))
                                     ErrorNotifier.showSuccess("A reset code has been sent to your email.")
-                                    // 弹出第二步，让用户输入新密码
+                                    // Pop up the second step and ask the user to enter a new password
                                     showNewPasswordDialog = true
                                 } catch (e: Exception) {
                                     ErrorNotifier.showError(e.message ?: "Network error.")
@@ -154,17 +154,17 @@ fun LoginScreen(
                 }
             )
         }
-        // --- 第二步弹窗：输入 Token 和新密码 ---
+        // --- Step 2 Pop-up window: Enter the Token and the new password ---
         if (showNewPasswordDialog) {
             AlertDialog(
                 onDismissRequest = { showNewPasswordDialog = false },
                 title   = { Text("Reset Your Password",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 18.sp  // 比默认 titleLarge 小一号
+                        fontSize = 18.sp  // One size smaller than the default titleLarge
                     )) },
                 text    = {
                     Column {
-                        // 1) 验证码输入
+                        // 1) Verification code input
                         OutlinedTextField(
                             value = resetToken,
                             onValueChange = { resetToken = it },
@@ -173,7 +173,7 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(8.dp))
-                        // 2) 新密码
+                        // 2) new password
                         OutlinedTextField(
                             value = newPassword,
                             onValueChange = { newPassword = it },
@@ -183,7 +183,7 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(8.dp))
-                        // 3) 确认密码
+                        // 3) confirm password
                         OutlinedTextField(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
@@ -196,7 +196,7 @@ fun LoginScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        // 校验三项都不空，且两次密码一致
+                        // Check that none of the three items are empty and the two passwords are the same
                         when {
                             resetToken.isBlank() ->
                                 ErrorNotifier.showError("Please enter the verification code.")
